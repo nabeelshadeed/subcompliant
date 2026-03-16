@@ -1,3 +1,3 @@
-const { defineCloudflareConfig } = require("@opennextjs/cloudflare/dist/api/config");
+const { defineCloudflareConfig } = require("@opennextjs/cloudflare");
 
 module.exports = defineCloudflareConfig({});
