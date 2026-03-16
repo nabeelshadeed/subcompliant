@@ -1,0 +1,122 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { Webhook } from 'svix'
+import { db } from '@/lib/db'
+import { users, contractors } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
+
+export const dynamic = 'force-dynamic'
+
+export async function POST(req: NextRequest) {
+  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET
+  if (!webhookSecret) {
+    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
+  }
+
+  const svixId        = req.headers.get('svix-id') ?? ''
+  const svixTimestamp = req.headers.get('svix-timestamp') ?? ''
+  const svixSignature = req.headers.get('svix-signature') ?? ''
+  const body          = await req.text()
+
+  const wh = new Webhook(webhookSecret)
+  let event: any
+
+  try {
+    event = wh.verify(body, {
+      'svix-id':        svixId,
+      'svix-timestamp': svixTimestamp,
+      'svix-signature': svixSignature,
+    })
+  } catch {
+    return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 })
+  }
+
+  const { type, data } = event
+
+  switch (type) {
+    case 'user.created': {
+      // If user has an org membership, link to contractor
+      const orgId = data.organization_memberships?.[0]?.organization?.id
+      let contractorId: string | null = null
+
+      if (orgId) {
+        const contractor = await db.query.contractors.findFirst({
+          where: eq(contractors.clerkOrgId, orgId)
+        })
+        contractorId = contractor?.id ?? null
+      }
+
+      if (contractorId) {
+        await db.insert(users).values({
+          clerkUserId:  data.id,
+          contractorId,
+          email:        data.email_addresses?.[0]?.email_address ?? '',
+          firstName:    data.first_name,
+          lastName:     data.last_name,
+          avatarUrl:    data.image_url,
+          role:         'viewer',
+        }).onConflictDoNothing()
+      }
+      break
+    }
+
+    case 'user.updated': {
+      await db.update(users)
+        .set({
+          email:     data.email_addresses?.[0]?.email_address,
+          firstName: data.first_name,
+          lastName:  data.last_name,
+          avatarUrl: data.image_url,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.clerkUserId, data.id))
+      break
+    }
+
+    case 'user.deleted': {
+      await db.update(users)
+        .set({ isActive: false })
+        .where(eq(users.clerkUserId, data.id))
+      break
+    }
+
+    case 'organization.created': {
+      // Auto-create contractor record on org creation
+      const slug = data.slug ?? data.id.replace('org_', '')
+      await db.insert(contractors).values({
+        clerkOrgId: data.id,
+        name:       data.name,
+        slug,
+        plan:       'starter',
+        subLimit:   10,
+        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14-day trial
+      }).onConflictDoNothing()
+      break
+    }
+
+    case 'organizationMembership.created': {
+      const orgId = data.organization?.id
+      const contractor = orgId
+        ? await db.query.contractors.findFirst({ where: eq(contractors.clerkOrgId, orgId) })
+        : null
+
+      if (contractor) {
+        await db.insert(users).values({
+          clerkUserId:  data.public_user_data?.user_id,
+          contractorId: contractor.id,
+          email:        data.public_user_data?.identifier ?? '',
+          firstName:    data.public_user_data?.first_name,
+          lastName:     data.public_user_data?.last_name,
+          avatarUrl:    data.public_user_data?.image_url,
+          role:         data.role === 'org:admin' ? 'admin' : 'viewer',
+        }).onConflictDoNothing()
+      }
+      break
+    }
+
+    default:
+      // Ignore unhandled events
+      break
+  }
+
+  return NextResponse.json({ received: true })
+}

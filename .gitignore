@@ -1,0 +1,30 @@
+# deps
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+build/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel
+
+# drizzle
+drizzle/*.sql
+drizzle/*.snap
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# misc
+.DS_Store
+*.pem
