@@ -21,8 +21,9 @@ const schema = z.object({
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const { ctx, error } = await getAuthContext()
   if (error) return error
 
@@ -39,7 +40,7 @@ export async function POST(
 
   // Verify doc belongs to a sub of this contractor
   const doc = await db.query.complianceDocuments.findFirst({
-    where: eq(complianceDocuments.id, params.id),
+    where: eq(complianceDocuments.id, id),
     with:  { documentType: true },
   })
 
@@ -75,7 +76,7 @@ export async function POST(
       issuerName:     issuerName ?? doc.issuerName,
       updatedAt:      new Date(),
     })
-    .where(eq(complianceDocuments.id, params.id))
+    .where(eq(complianceDocuments.id, id))
 
   // Notify sub by email
   const profile = sub.profile as any
@@ -110,7 +111,7 @@ export async function POST(
     actorId:      ctx.userId,
     action:       `document.${action}d`,
     resourceType: 'compliance_document',
-    resourceId:   params.id,
+    resourceId:   id,
     payload:      { reviewNotes, rejectedReason },
   })
 

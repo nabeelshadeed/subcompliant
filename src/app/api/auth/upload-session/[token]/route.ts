@@ -7,10 +7,11 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
+  const { token } = await params
   const session = await db.query.uploadSessions.findFirst({
-    where: eq(uploadSessions.token, params.token),
+    where: eq(uploadSessions.token, token),
     with:  { contractor: true },
   })
 

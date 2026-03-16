@@ -4,15 +4,16 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Subcontractors' }
 
-export default function SubcontractorsPage({
+export default async function SubcontractorsPage({
   searchParams
 }: {
-  searchParams: { q?: string; status?: string; page?: string }
+  searchParams: Promise<{ q?: string; status?: string; page?: string }>
 }) {
+  const sp = await searchParams
   return (
     <div className="space-y-5 max-w-7xl">
       <Suspense fallback={<div className="h-96 flex items-center justify-center text-sm text-gray-400">Loading…</div>}>
-        <SubcontractorList searchParams={searchParams} />
+        <SubcontractorList searchParams={sp} />
       </Suspense>
     </div>
   )

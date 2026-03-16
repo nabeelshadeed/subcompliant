@@ -16,7 +16,7 @@ import { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Documents' }
 
 interface Props {
-  searchParams: { q?: string; status?: string; category?: string; page?: string }
+  searchParams: Promise<{ q?: string; status?: string; category?: string; page?: string }>
 }
 
 const STATUSES   = ['pending', 'processing', 'approved', 'rejected', 'expired']
@@ -29,7 +29,8 @@ export default async function DocumentsPage({ searchParams }: Props) {
   if (!user) redirect('/auth/sign-up')
 
   const contractorId = user.contractorId
-  const page   = parseInt(searchParams.page ?? '1')
+  const sp = await searchParams
+  const page   = parseInt(sp.page ?? '1')
   const limit  = 30
   const offset = (page - 1) * limit
 
@@ -64,10 +65,10 @@ export default async function DocumentsPage({ searchParams }: Props) {
     .where(and(
       eq(complianceDocuments.isCurrent, true),
       sql`${complianceDocuments.profileId} IN (${profileIdsSq})`,
-      searchParams.status   ? eq(complianceDocuments.status, searchParams.status as any)   : undefined,
-      searchParams.category ? eq(documentTypes.category, searchParams.category)            : undefined,
-      searchParams.q
-        ? sql`(${documentTypes.name} || ' ' || COALESCE(${subProfiles.firstName}, '') || ' ' || COALESCE(${subProfiles.lastName}, '')) ILIKE ${`%${searchParams.q}%`}`
+      sp.status   ? eq(complianceDocuments.status, sp.status as any)   : undefined,
+      sp.category ? eq(documentTypes.category, sp.category)            : undefined,
+      sp.q
+        ? sql`(${documentTypes.name} || ' ' || COALESCE(${subProfiles.firstName}, '') || ' ' || COALESCE(${subProfiles.lastName}, '')) ILIKE ${`%${sp.q}%`}`
         : undefined,
     ))
     .orderBy(desc(complianceDocuments.submittedAt))
@@ -124,22 +125,22 @@ export default async function DocumentsPage({ searchParams }: Props) {
       <div className="flex items-center gap-3 flex-wrap">
         <Suspense>
           <DocumentFilters
-            currentSearch={searchParams.q}
-            currentStatus={searchParams.status}
-            currentCategory={searchParams.category}
+            currentSearch={sp.q}
+            currentStatus={sp.status}
+            currentCategory={sp.category}
           />
         </Suspense>
 
         {/* Status pills */}
         <div className="flex gap-1.5 flex-wrap">
-          <FilterPill href="?" label="All" count={total} active={!searchParams.status} />
+          <FilterPill href="?" label="All" count={total} active={!sp.status} />
           {STATUSES.map(s => (
             <FilterPill
               key={s}
-              href={`?status=${s}${searchParams.q ? `&q=${searchParams.q}` : ''}`}
+              href={`?status=${s}${sp.q ? `&q=${sp.q}` : ''}`}
               label={s.charAt(0).toUpperCase() + s.slice(1)}
               count={countMap[s] ?? 0}
-              active={searchParams.status === s}
+              active={sp.status === s}
             />
           ))}
         </div>
@@ -250,7 +251,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
               <div className="flex gap-2">
                 {page > 1 && (
                   <Link
-                    href={`?${new URLSearchParams({ ...searchParams, page: String(page - 1) })}`}
+                    href={`?${new URLSearchParams({ ...sp, page: String(page - 1) })}`}
                     className="px-3 py-1.5 text-xs font-medium border border-gray-200 rounded-lg hover:bg-gray-50"
                   >
                     Previous
@@ -258,7 +259,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
                 )}
                 {offset + limit < total && (
                   <Link
-                    href={`?${new URLSearchParams({ ...searchParams, page: String(page + 1) })}`}
+                    href={`?${new URLSearchParams({ ...sp, page: String(page + 1) })}`}
                     className="px-3 py-1.5 text-xs font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700"
                   >
                     Next

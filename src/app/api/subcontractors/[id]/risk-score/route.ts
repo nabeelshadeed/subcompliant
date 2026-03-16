@@ -9,14 +9,15 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const { ctx, error } = await getAuthContext()
   if (error) return error
 
   const sub = await db.query.subcontractors.findFirst({
     where: and(
-      eq(subcontractors.id, params.id),
+      eq(subcontractors.id, id),
       eq(subcontractors.contractorId, ctx.contractorId)
     ),
   })

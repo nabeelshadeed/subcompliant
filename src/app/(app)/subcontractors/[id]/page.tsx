@@ -18,13 +18,15 @@ import { getPresignedDownloadUrl } from '@/lib/r2'
 import DocumentReviewPanel from '@/components/documents/DocumentReviewPanel'
 import { Metadata } from 'next'
 
-interface Props { params: { id: string } }
+interface Props { params: Promise<{ id: string }> }
 
 export const metadata: Metadata = { title: 'Subcontractor Profile' }
 
 export default async function SubcontractorProfilePage({ params }: Props) {
   const { userId: clerkUserId } = await auth()
   if (!clerkUserId) redirect('/auth/sign-in')
+
+  const { id } = await params
 
   const user = await db.query.users.findFirst({
     where: eq(users.clerkUserId, clerkUserId),
@@ -33,7 +35,7 @@ export default async function SubcontractorProfilePage({ params }: Props) {
 
   const sub = await db.query.subcontractors.findFirst({
     where: and(
-      eq(subcontractors.id, params.id),
+      eq(subcontractors.id, id),
       eq(subcontractors.contractorId, user.contractorId)
     ),
     with: { profile: true },

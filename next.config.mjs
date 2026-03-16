@@ -1,11 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: [
-      'postgres',
-      '@aws-sdk/client-s3',
-    ],
-  },
+  serverExternalPackages: [
+    'postgres',
+    '@aws-sdk/client-s3',
+  ],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'docs.subcompliant.co.uk' },
