@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['postgres'],
+    serverComponentsExternalPackages: [
+      'postgres',
+      '@aws-sdk/client-s3',
+    ],
   },
   images: {
     remotePatterns: [
