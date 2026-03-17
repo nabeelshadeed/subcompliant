@@ -12,7 +12,7 @@ export default async function SubcontractorsPage({
   const sp = await searchParams
   return (
     <div className="space-y-5 max-w-7xl">
-      <Suspense fallback={<div className="h-96 flex items-center justify-center text-sm text-gray-400">Loading…</div>}>
+      <Suspense fallback={<div className="h-96 flex items-center justify-center text-sm text-white/60">Loading…</div>}>
         <SubcontractorList searchParams={sp} />
       </Suspense>
     </div>

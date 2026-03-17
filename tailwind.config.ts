@@ -23,12 +23,15 @@ const config: Config = {
           900: '#0a436e',
           950: '#072b49',
         },
+        accent: '#CCFF00',
+        'accent-hover': '#B8E600',
         success: { DEFAULT: '#16a34a', light: '#dcfce7' },
         warning: { DEFAULT: '#d97706', light: '#fef9c3' },
         danger:  { DEFAULT: '#dc2626', light: '#fee2e2' },
       },
       fontFamily: {
-        sans: ['system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        sans: ['var(--font-dm-sans)', 'DM Sans', 'system-ui', 'sans-serif'],
+        display: ['var(--font-syne)', 'Syne', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'monospace'],
       },
       borderRadius: {

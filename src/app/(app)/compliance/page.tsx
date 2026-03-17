@@ -53,8 +53,8 @@ export default async function CompliancePage() {
   return (
     <div className="space-y-5 max-w-7xl">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Compliance Overview</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Real-time compliance status across all subcontractors</p>
+        <h1 className="text-xl font-bold font-display text-white">Compliance Overview</h1>
+        <p className="text-sm text-white/60 mt-0.5">Real-time compliance status across all subcontractors</p>
       </div>
 
       {/* Stats */}
@@ -67,67 +67,67 @@ export default async function CompliancePage() {
 
       {/* Sub-by-sub table */}
       <div className="card overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-900">
+        <div className="px-5 py-4 border-b border-white/10">
+          <h2 className="text-sm font-semibold text-white">
             Subcontractor Compliance — sorted by worst first
           </h2>
         </div>
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-100">
+            <tr className="bg-white/5 border-b border-white/10">
               {['Subcontractor', 'Status', 'Score', 'Missing', 'Expiring', 'Expired'].map(h => (
-                <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">{h}</th>
+                <th key={h} className="text-left text-xs font-semibold text-white/60 uppercase tracking-wide px-5 py-3">{h}</th>
               ))}
               <th />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-white/10">
             {subsWithCompliance.map(row => (
-              <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={row.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-5 py-3.5">
-                  <p className="font-medium text-gray-900">{row.firstName} {row.lastName}</p>
-                  {row.companyName && <p className="text-xs text-gray-400">{row.companyName}</p>}
+                  <p className="font-medium text-white">{row.firstName} {row.lastName}</p>
+                  {row.companyName && <p className="text-xs text-white/50">{row.companyName}</p>}
                 </td>
                 <td className="px-5 py-3.5">
                   <ComplianceBadge status={row.compliance.status} />
                 </td>
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full ${
-                          row.compliance.score >= 80 ? 'bg-green-500' :
-                          row.compliance.score >= 50 ? 'bg-yellow-400' : 'bg-red-400'
+                          row.compliance.score >= 80 ? 'bg-emerald-400' :
+                          row.compliance.score >= 50 ? 'bg-amber-400' : 'bg-red-400'
                         }`}
                         style={{ width: `${row.compliance.score}%` }}
                       />
                     </div>
-                    <span className="text-xs font-bold text-gray-700 tabular-nums w-8">{row.compliance.score}%</span>
+                    <span className="text-xs font-bold text-white tabular-nums w-8">{row.compliance.score}%</span>
                   </div>
                 </td>
                 <td className="px-5 py-3.5">
                   {row.compliance.missing.length > 0 ? (
-                    <span className="text-xs text-red-600 font-medium">{row.compliance.missing.length}</span>
+                    <span className="text-xs text-red-400 font-medium">{row.compliance.missing.length}</span>
                   ) : (
-                    <span className="text-xs text-gray-300">—</span>
+                    <span className="text-xs text-white/40">—</span>
                   )}
                 </td>
                 <td className="px-5 py-3.5">
                   {row.compliance.expiringSoon.length > 0 ? (
-                    <span className="text-xs text-yellow-600 font-medium">{row.compliance.expiringSoon.length}</span>
+                    <span className="text-xs text-amber-400 font-medium">{row.compliance.expiringSoon.length}</span>
                   ) : (
-                    <span className="text-xs text-gray-300">—</span>
+                    <span className="text-xs text-white/40">—</span>
                   )}
                 </td>
                 <td className="px-5 py-3.5">
                   {row.compliance.expired.length > 0 ? (
-                    <span className="text-xs text-orange-600 font-medium">{row.compliance.expired.length}</span>
+                    <span className="text-xs text-orange-400 font-medium">{row.compliance.expired.length}</span>
                   ) : (
-                    <span className="text-xs text-gray-300">—</span>
+                    <span className="text-xs text-white/40">—</span>
                   )}
                 </td>
                 <td className="px-5 py-3.5 text-right">
-                  <Link href={`/subcontractors/${row.id}`} className="text-xs font-medium text-brand-600 hover:text-brand-700">
+                  <Link href={`/subcontractors/${row.id}`} className="text-xs font-medium text-accent hover:text-accent-hover">
                     View →
                   </Link>
                 </td>

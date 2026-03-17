@@ -2,9 +2,10 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, SlidersHorizontal } from 'lucide-react'
-import { useTransition, useState } from 'react'
+import { useTransition, useState, useCallback, useEffect } from 'react'
 
 const CATEGORIES = ['insurance', 'certification', 'legal', 'training']
+const SEARCH_DEBOUNCE_MS = 400
 
 interface Props {
   currentSearch?:   string
@@ -18,37 +19,48 @@ export default function DocumentFilters({ currentSearch, currentStatus, currentC
   const [, startTransition] = useTransition()
   const [search, setSearch] = useState(currentSearch ?? '')
 
-  function update(key: string, value: string) {
+  const update = useCallback((key: string, value: string) => {
     const sp = new URLSearchParams(searchParams.toString())
     value ? sp.set(key, value) : sp.delete(key)
     sp.delete('page')
     startTransition(() => router.push(`?${sp.toString()}`))
-  }
+  }, [searchParams, router])
+
+  // Sync local search from URL when navigating back
+  useEffect(() => {
+    setSearch(currentSearch ?? '')
+  }, [currentSearch])
+
+  // Debounced URL update for search input
+  useEffect(() => {
+    if (search === (currentSearch ?? '')) return
+    const t = setTimeout(() => update('q', search), SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(t)
+  }, [search, currentSearch, update])
 
   return (
     <div className="flex items-center gap-3 flex-wrap">
       {/* Search */}
       <div className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" aria-hidden />
         <input
-          type="text"
+          type="search"
           value={search}
-          onChange={e => {
-            setSearch(e.target.value)
-            update('q', e.target.value)
-          }}
+          onChange={e => setSearch(e.target.value)}
           placeholder="Search documents…"
-          className="pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 w-52 bg-white"
+          className="pl-8 pr-3 py-2 text-sm border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent w-52 bg-white/5 text-white placeholder:text-white/40"
+          aria-label="Search documents"
         />
       </div>
 
       {/* Category filter */}
       <div className="relative">
-        <SlidersHorizontal size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <SlidersHorizontal size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" aria-hidden />
         <select
+          aria-label="Filter by category"
           value={currentCategory ?? ''}
           onChange={e => update('category', e.target.value)}
-          className="pl-8 pr-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 appearance-none"
+          className="pl-8 pr-8 py-2 text-sm border border-white/10 rounded-lg bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-accent appearance-none"
         >
           <option value="">All categories</option>
           {CATEGORIES.map(c => (

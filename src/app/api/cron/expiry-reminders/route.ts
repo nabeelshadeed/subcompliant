@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
+import { addDays, addHours } from 'date-fns'
 import { db } from '@/lib/db'
-import { complianceDocuments, subProfiles, subcontractors, notifications } from '@/lib/db/schema'
+import { complianceDocuments, subProfiles, subcontractors, notifications, uploadSessions } from '@/lib/db/schema'
 import { eq, and, between, lt, sql } from 'drizzle-orm'
 import { sendExpiryWarning } from '@/lib/resend'
-import { addDays } from 'date-fns'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,18 +23,22 @@ export async function GET(req: NextRequest) {
   // Find approved docs expiring in next 30 days (send reminder once per window)
   const expiringDocs = await db
     .select({
-      docId:       complianceDocuments.id,
-      expiresAt:   complianceDocuments.expiresAt,
-      profileId:   complianceDocuments.profileId,
-      ownerEmail:  subProfiles.ownerEmail,
-      firstName:   subProfiles.firstName,
-      lastName:    subProfiles.lastName,
-      docTypeName: sql<string>`(
+      docId:           complianceDocuments.id,
+      documentTypeId:  complianceDocuments.documentTypeId,
+      expiresAt:       complianceDocuments.expiresAt,
+      profileId:       complianceDocuments.profileId,
+      contractorId:    subcontractors.contractorId,
+      subcontractorId: subcontractors.id,
+      ownerEmail:      subProfiles.ownerEmail,
+      firstName:       subProfiles.firstName,
+      lastName:        subProfiles.lastName,
+      docTypeName:     sql<string>`(
         SELECT name FROM document_types WHERE id = ${complianceDocuments.documentTypeId}
       )`,
     })
     .from(complianceDocuments)
     .innerJoin(subProfiles, eq(complianceDocuments.profileId, subProfiles.id))
+    .innerJoin(subcontractors, eq(subcontractors.profileId, complianceDocuments.profileId))
     .where(and(
       eq(complianceDocuments.status, 'approved'),
       eq(complianceDocuments.isCurrent, true),
@@ -64,7 +69,24 @@ export async function GET(req: NextRequest) {
 
     if (alreadySent) { skipped++; continue }
 
-    const uploadLink = `${process.env.NEXT_PUBLIC_APP_URL}/upload?sub=${doc.profileId}`
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+    let uploadLink = `${appUrl}/upload`
+    try {
+      const token = crypto.randomBytes(48).toString('base64url')
+      await db.insert(uploadSessions).values({
+        token:               token,
+        contractorId:        doc.contractorId,
+        subcontractorId:     doc.subcontractorId,
+        requiredDocTypeIds:  doc.documentTypeId ? [doc.documentTypeId] : undefined,
+        expiresAt:           addHours(now, 168),
+        subEmail:            doc.ownerEmail,
+        subName:             doc.firstName && doc.lastName ? `${doc.firstName} ${doc.lastName}`.trim() : undefined,
+        isSingleUse:         false,
+      })
+      uploadLink = `${appUrl}/upload?t=${token}`
+    } catch {
+      // If session creation fails, link still goes to upload page (sub can request new link)
+    }
 
     try {
       await sendExpiryWarning({
@@ -77,6 +99,7 @@ export async function GET(req: NextRequest) {
       })
 
       await db.insert(notifications).values({
+        contractorId:    doc.contractorId,
         profileId:      doc.profileId,
         documentId:     doc.docId,
         eventType:      `document_expiring_${daysRemaining}d`,

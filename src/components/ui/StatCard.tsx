@@ -12,17 +12,17 @@ interface StatCardProps {
 }
 
 const variants = {
-  default: 'border-gray-200',
-  success: 'border-green-200 bg-green-50/30',
-  warning: 'border-yellow-200 bg-yellow-50/30',
-  danger:  'border-red-200 bg-red-50/30',
+  default: 'border-white/10',
+  success: 'border-emerald-500/30 bg-emerald-500/10',
+  warning: 'border-amber-500/30 bg-amber-500/10',
+  danger:  'border-red-500/30 bg-red-500/10',
 }
 
 const iconBg = {
-  default: 'bg-brand-50 text-brand-600',
-  success: 'bg-green-100 text-green-700',
-  warning: 'bg-yellow-100 text-yellow-700',
-  danger:  'bg-red-100 text-red-700',
+  default: 'bg-accent/15 text-accent',
+  success: 'bg-emerald-500/20 text-emerald-400',
+  warning: 'bg-amber-500/20 text-amber-400',
+  danger:  'bg-red-500/20 text-red-400',
 }
 
 export default function StatCard({
@@ -32,13 +32,13 @@ export default function StatCard({
     <div className={cn('card p-5', variants[variant], className)}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-gray-500 font-medium">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900 tabular-nums">{value}</p>
-          {sub && <p className="mt-0.5 text-xs text-gray-400">{sub}</p>}
+          <p className="text-sm font-medium text-white/60">{label}</p>
+          <p className="mt-1 text-2xl font-bold font-display text-white tabular-nums">{value}</p>
+          {sub && <p className="mt-0.5 text-xs text-white/50">{sub}</p>}
           {trend && (
             <p className={cn(
               'mt-1 text-xs font-medium',
-              trend.value >= 0 ? 'text-green-600' : 'text-red-600'
+              trend.value >= 0 ? 'text-emerald-400' : 'text-red-400'
             )}>
               {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)}% {trend.label}
             </p>

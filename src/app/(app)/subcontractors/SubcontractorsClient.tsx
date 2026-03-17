@@ -35,20 +35,20 @@ export default function SubcontractorsClient({ total, currentSearch, currentStat
     <>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Subcontractors</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{total} total</p>
+          <h1 className="text-xl font-bold font-display text-white">Subcontractors</h1>
+          <p className="text-sm text-white/60 mt-0.5">{total} total</p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           {/* Search */}
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
             <input
               type="text"
               defaultValue={currentSearch}
               placeholder="Search by name…"
               onChange={e => update({ q: e.target.value })}
-              className="pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-48"
+              className="pl-8 pr-3 py-2 text-sm border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-white/5 text-white placeholder:text-white/40 w-48"
             />
           </div>
 
@@ -56,16 +56,16 @@ export default function SubcontractorsClient({ total, currentSearch, currentStat
           <select
             defaultValue={currentStatus ?? ''}
             onChange={e => update({ status: e.target.value })}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-white"
+            className="px-3 py-2 text-sm border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-white/5 text-white"
           >
             {STATUSES.map(s => (
-              <option key={s.value} value={s.value}>{s.label}</option>
+              <option key={s.value} value={s.value} className="bg-[#111]">{s.label}</option>
             ))}
           </select>
 
           <button
             onClick={() => setInviteOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-[#0A0A0A] text-sm font-semibold rounded-lg hover:bg-accent-hover transition-colors"
           >
             <UserPlus size={14} />
             Invite

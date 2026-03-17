@@ -10,9 +10,8 @@ import { currentUser } from '@clerk/nextjs/server'
 export const dynamic = 'force-dynamic'
 
 const schema = z.object({
-  priceId:  z.string(),
-  planKey:  z.enum(['starter', 'pro', 'business']),
-  billing:  z.enum(['monthly', 'annual']),
+  planKey: z.enum(['starter', 'pro', 'business']),
+  billing: z.enum(['monthly', 'annual']),
 })
 
 export async function POST(req: NextRequest) {
@@ -45,8 +44,8 @@ export async function POST(req: NextRequest) {
       .where(eq(contractors.id, ctx.contractorId))
   }
 
-  const plan     = PLANS[parsed.data.planKey]
-  const priceId  = parsed.data.billing === 'annual' ? plan.annual : plan.monthly
+  const plan    = PLANS[parsed.data.planKey]
+  const priceId = parsed.data.billing === 'annual' ? plan.annual : plan.monthly
 
   const session = await createCheckoutSession({
     customerId,

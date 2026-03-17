@@ -61,16 +61,16 @@ export function DocStatusBadge({ status }: { status: string }) {
 
 export function RiskBadge({ score, level }: { score: number; level: string }) {
   const colors: Record<string, string> = {
-    low:      'text-green-700 bg-green-50 border-green-200',
-    medium:   'text-yellow-700 bg-yellow-50 border-yellow-200',
-    high:     'text-orange-700 bg-orange-50 border-orange-200',
-    critical: 'text-red-700 bg-red-50 border-red-200',
+    low:      'text-emerald-400 bg-emerald-500/20 border-emerald-500/30',
+    medium:   'text-amber-400 bg-amber-500/20 border-amber-500/30',
+    high:     'text-orange-400 bg-orange-500/20 border-orange-500/30',
+    critical: 'text-red-400 bg-red-500/20 border-red-500/30',
   }
 
   return (
     <span className={cn(
       'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border',
-      colors[level] ?? 'text-gray-600 bg-gray-100 border-gray-200'
+      colors[level] ?? 'text-white/60 bg-white/10 border-white/20'
     )}>
       <span className="tabular-nums font-bold">{score}</span>
       <span className="capitalize">{level}</span>

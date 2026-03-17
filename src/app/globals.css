@@ -4,6 +4,20 @@
 
 :root {
   --radius: 0.5rem;
+  --app-bg: #0A0A0A;
+  --app-bg2: #111111;
+  --app-bg3: #181818;
+  --app-acc: #CCFF00;
+  --app-acc2: #B8E600;
+  --app-border: rgba(255,255,255,0.08);
+  --app-border2: rgba(255,255,255,0.16);
+  --app-text: #fff;
+  --app-muted: rgba(255,255,255,0.55);
+  --app-muted2: rgba(255,255,255,0.35);
+}
+
+html {
+  background: #0A0A0A;
 }
 
 @layer base {
@@ -12,13 +26,33 @@
   }
 
   body {
-    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Focus visible for accessibility without forcing focus ring on mouse click */
+  :focus-visible {
+    outline: 2px solid var(--app-acc);
+    outline-offset: 2px;
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
 @layer components {
   .card {
+    @apply rounded-xl border;
+    background: var(--app-bg2);
+    border-color: var(--app-border);
+  }
+  .card-light {
     @apply bg-white border border-gray-200 rounded-xl shadow-sm;
   }
 

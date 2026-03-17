@@ -38,32 +38,32 @@ export function initials(first?: string | null, last?: string | null): string {
 
 export function complianceColor(status: string): string {
   switch (status) {
-    case 'compliant':           return 'text-green-700 bg-green-50 border-green-200'
-    case 'partially_compliant': return 'text-yellow-700 bg-yellow-50 border-yellow-200'
-    case 'non_compliant':       return 'text-red-700 bg-red-50 border-red-200'
-    default:                    return 'text-gray-600 bg-gray-100 border-gray-200'
+    case 'compliant':           return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30'
+    case 'partially_compliant': return 'text-amber-400 bg-amber-500/20 border-amber-500/30'
+    case 'non_compliant':       return 'text-red-400 bg-red-500/20 border-red-500/30'
+    default:                    return 'text-white/60 bg-white/10 border-white/20'
   }
 }
 
 export function riskColor(level: string): string {
   switch (level) {
-    case 'low':      return 'text-green-700 bg-green-50'
-    case 'medium':   return 'text-yellow-700 bg-yellow-50'
-    case 'high':     return 'text-orange-700 bg-orange-50'
-    case 'critical': return 'text-red-700 bg-red-50'
-    default:         return 'text-gray-600 bg-gray-100'
+    case 'low':      return 'text-emerald-400 bg-emerald-500/20'
+    case 'medium':   return 'text-amber-400 bg-amber-500/20'
+    case 'high':     return 'text-orange-400 bg-orange-500/20'
+    case 'critical': return 'text-red-400 bg-red-500/20'
+    default:         return 'text-white/60 bg-white/10'
   }
 }
 
 export function docStatusColor(status: string): string {
   switch (status) {
-    case 'approved':    return 'text-green-700 bg-green-50 border-green-200'
-    case 'pending':     return 'text-blue-700 bg-blue-50 border-blue-200'
-    case 'processing':  return 'text-blue-700 bg-blue-50 border-blue-200'
-    case 'rejected':    return 'text-red-700 bg-red-50 border-red-200'
-    case 'expired':     return 'text-orange-700 bg-orange-50 border-orange-200'
-    case 'missing':     return 'text-gray-500 bg-gray-50 border-gray-200'
-    case 'expiring_soon': return 'text-yellow-700 bg-yellow-50 border-yellow-200'
-    default:            return 'text-gray-600 bg-gray-100 border-gray-200'
+    case 'approved':    return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30'
+    case 'pending':     return 'text-blue-400 bg-blue-500/20 border-blue-500/30'
+    case 'processing':  return 'text-blue-400 bg-blue-500/20 border-blue-500/30'
+    case 'rejected':    return 'text-red-400 bg-red-500/20 border-red-500/30'
+    case 'expired':     return 'text-orange-400 bg-orange-500/20 border-orange-500/30'
+    case 'missing':     return 'text-white/50 bg-white/10 border-white/20'
+    case 'expiring_soon': return 'text-amber-400 bg-amber-500/20 border-amber-500/30'
+    default:            return 'text-white/60 bg-white/10 border-white/20'
   }
 }

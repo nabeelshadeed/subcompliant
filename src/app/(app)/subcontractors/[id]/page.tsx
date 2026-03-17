@@ -99,27 +99,27 @@ export default async function SubcontractorProfilePage({ params }: Props) {
   ] as { label: string; value: number; bold?: boolean }[]
 
   function riskColour(v: number) {
-    return v <= 20 ? 'bg-green-50 text-green-700'
-         : v <= 50 ? 'bg-yellow-50 text-yellow-700'
-         : v <= 75 ? 'bg-orange-50 text-orange-700'
-                   : 'bg-red-50 text-red-700'
+    return v <= 20 ? 'bg-emerald-500/15 text-emerald-400'
+         : v <= 50 ? 'bg-amber-500/15 text-amber-400'
+         : v <= 75 ? 'bg-orange-500/15 text-orange-400'
+                   : 'bg-red-500/15 text-red-400'
   }
 
   return (
     <div className="space-y-5 max-w-5xl">
-      <Link href="/subcontractors" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700">
+      <Link href="/subcontractors" className="inline-flex items-center gap-1.5 text-sm text-white/60 hover:text-white">
         <ArrowLeft size={14} /> Back to subcontractors
       </Link>
 
       {/* Profile header */}
       <div className="card p-6">
         <div className="flex items-start gap-5">
-          <div className="w-14 h-14 rounded-xl bg-brand-100 flex items-center justify-center text-xl font-bold text-brand-700 flex-shrink-0">
+          <div className="w-14 h-14 rounded-xl bg-accent/20 flex items-center justify-center text-xl font-bold text-accent flex-shrink-0">
             {initials(profile.firstName, profile.lastName)}
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold font-display text-white">
                 {profile.firstName} {profile.lastName}
               </h1>
               <ComplianceBadge status={compliance.status} />
@@ -127,17 +127,17 @@ export default async function SubcontractorProfilePage({ params }: Props) {
             </div>
 
             {profile.companyName && (
-              <div className="flex items-center gap-1.5 text-sm text-gray-500 mt-1">
+              <div className="flex items-center gap-1.5 text-sm text-white/60 mt-1">
                 <Building2 size={13} />{profile.companyName}
               </div>
             )}
 
             <div className="flex items-center gap-4 mt-2 flex-wrap">
-              <span className="flex items-center gap-1.5 text-sm text-gray-500">
+              <span className="flex items-center gap-1.5 text-sm text-white/60">
                 <Mail size={13} />{profile.ownerEmail}
               </span>
               {profile.phone && (
-                <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                <span className="flex items-center gap-1.5 text-sm text-white/60">
                   <Phone size={13} />{profile.phone}
                 </span>
               )}
@@ -145,10 +145,10 @@ export default async function SubcontractorProfilePage({ params }: Props) {
           </div>
 
           <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border flex-shrink-0 ${
-            sub.status === 'active'    ? 'bg-green-50 text-green-700 border-green-200' :
-            sub.status === 'invited'   ? 'bg-blue-50 text-blue-700 border-blue-200' :
-            sub.status === 'suspended' ? 'bg-red-50 text-red-700 border-red-200' :
-            'bg-gray-100 text-gray-600 border-gray-200'
+            sub.status === 'active'    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+            sub.status === 'invited'   ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+            sub.status === 'suspended' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+            'bg-white/10 text-white/60 border-white/20'
           }`}>
             {sub.status}
           </span>
@@ -158,35 +158,35 @@ export default async function SubcontractorProfilePage({ params }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Compliance summary */}
         <div className="card p-5">
-          <h2 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Shield size={15} className="text-brand-500" />Compliance
+          <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+            <Shield size={15} className="text-accent" />Compliance
           </h2>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Score</span>
-              <span className="font-bold text-gray-900">{compliance.score}%</span>
+              <span className="text-white/60">Score</span>
+              <span className="font-bold text-white">{compliance.score}%</span>
             </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full ${
-                  compliance.score >= 80 ? 'bg-green-500' :
-                  compliance.score >= 50 ? 'bg-yellow-400' : 'bg-red-400'
+                  compliance.score >= 80 ? 'bg-emerald-400' :
+                  compliance.score >= 50 ? 'bg-amber-400' : 'bg-red-400'
                 }`}
                 style={{ width: `${compliance.score}%` }}
               />
             </div>
-            <div className="pt-2 space-y-1.5 text-xs text-gray-600">
+            <div className="pt-2 space-y-1.5 text-xs text-white/70">
               {compliance.missing.length > 0 && (
-                <p className="text-red-600">✕ Missing: {compliance.missing.join(', ')}</p>
+                <p className="text-red-400">✕ Missing: {compliance.missing.join(', ')}</p>
               )}
               {compliance.expiringSoon.length > 0 && (
-                <p className="text-yellow-600">⚠ Expiring: {compliance.expiringSoon.join(', ')}</p>
+                <p className="text-amber-400">⚠ Expiring: {compliance.expiringSoon.join(', ')}</p>
               )}
               {compliance.expired.length > 0 && (
-                <p className="text-orange-600">! Expired: {compliance.expired.join(', ')}</p>
+                <p className="text-orange-400">! Expired: {compliance.expired.join(', ')}</p>
               )}
               {compliance.missing.length === 0 && compliance.expiringSoon.length === 0 && compliance.expired.length === 0 && (
-                <p className="text-green-600 font-medium">All documents in order ✓</p>
+                <p className="text-emerald-400 font-medium">All documents in order ✓</p>
               )}
             </div>
           </div>
@@ -194,12 +194,12 @@ export default async function SubcontractorProfilePage({ params }: Props) {
 
         {/* Risk breakdown */}
         <div className="card p-5 lg:col-span-2">
-          <h2 className="text-sm font-semibold text-gray-900 mb-4">Risk Score Breakdown</h2>
+          <h2 className="text-sm font-semibold text-white mb-4">Risk Score Breakdown</h2>
           <div className="grid grid-cols-3 gap-3">
             {RISK_COMPONENTS.map(({ label, value, bold }) => (
               <div key={label} className={`p-3 rounded-lg ${riskColour(value)}`}>
-                <p className="text-xs opacity-70">{label}</p>
-                <p className={`text-lg tabular-nums ${bold ? 'font-black' : 'font-bold'}`}>{value}</p>
+                <p className="text-xs opacity-80">{label}</p>
+                <p className={`text-lg tabular-nums text-white ${bold ? 'font-black' : 'font-bold'}`}>{value}</p>
               </div>
             ))}
           </div>
@@ -208,10 +208,10 @@ export default async function SubcontractorProfilePage({ params }: Props) {
 
       {/* Documents table */}
       <div className="card overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-900">Documents</h2>
+        <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-white">Documents</h2>
           {canReview && (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-white/50">
               Admin — click Approve / Reject on any pending document
             </p>
           )}
@@ -219,56 +219,56 @@ export default async function SubcontractorProfilePage({ params }: Props) {
 
         {docsWithUrls.length === 0 ? (
           <div className="py-10 text-center">
-            <FileText size={28} className="text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-400">No documents uploaded yet</p>
+            <FileText size={28} className="text-white/40 mx-auto mb-2" />
+            <p className="text-sm text-white/50">No documents uploaded yet</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-white/10">
             {docsWithUrls.map(doc => (
-              <div key={doc.id} className="px-5 py-4 hover:bg-gray-50/50 transition-colors">
+              <div key={doc.id} className="px-5 py-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-start gap-3">
                   {/* Icon */}
                   <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                    doc.docTypeCategory === 'insurance'     ? 'bg-blue-50' :
-                    doc.docTypeCategory === 'certification' ? 'bg-purple-50' :
-                    doc.docTypeCategory === 'legal'         ? 'bg-orange-50' :
-                    'bg-gray-100'
+                    doc.docTypeCategory === 'insurance'     ? 'bg-blue-500/20' :
+                    doc.docTypeCategory === 'certification' ? 'bg-purple-500/20' :
+                    doc.docTypeCategory === 'legal'         ? 'bg-orange-500/20' :
+                    'bg-white/10'
                   }`}>
                     <FileText size={15} className={
-                      doc.docTypeCategory === 'insurance'     ? 'text-blue-500' :
-                      doc.docTypeCategory === 'certification' ? 'text-purple-500' :
-                      doc.docTypeCategory === 'legal'         ? 'text-orange-500' :
-                      'text-gray-400'
+                      doc.docTypeCategory === 'insurance'     ? 'text-blue-400' :
+                      doc.docTypeCategory === 'certification' ? 'text-purple-400' :
+                      doc.docTypeCategory === 'legal'         ? 'text-orange-400' :
+                      'text-white/50'
                     } />
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-gray-900">{doc.docTypeName}</span>
+                      <span className="text-sm font-semibold text-white">{doc.docTypeName}</span>
                       <DocStatusBadge status={doc.status} />
                       {doc.isVerified && (
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 font-medium">
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 font-medium">
                           Verified
                         </span>
                       )}
                     </div>
 
                     {doc.fileName && (
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-xs text-white/50 mt-0.5">
                         {doc.fileName}
                         {doc.fileSizeBytes ? ` · ${formatBytes(doc.fileSizeBytes)}` : ''}
                       </p>
                     )}
 
-                    <div className="flex items-center gap-4 mt-1.5 text-xs text-gray-500 flex-wrap">
+                    <div className="flex items-center gap-4 mt-1.5 text-xs text-white/50 flex-wrap">
                       {doc.issuedAt && <span>Issued {formatDate(doc.issuedAt)}</span>}
                       {doc.expiresAt && (
                         <span className={
                           new Date(doc.expiresAt) < new Date()
-                            ? 'text-red-600 font-semibold'
+                            ? 'text-red-400 font-semibold'
                             : new Date(doc.expiresAt) < new Date(Date.now() + 30 * 86400000)
-                            ? 'text-yellow-600 font-medium'
+                            ? 'text-amber-400 font-medium'
                             : ''
                         }>
                           Expires {formatDate(doc.expiresAt)}
@@ -284,12 +284,12 @@ export default async function SubcontractorProfilePage({ params }: Props) {
                     </div>
 
                     {doc.reviewNotes && (
-                      <p className="mt-1 text-xs text-gray-500 italic">
+                      <p className="mt-1 text-xs text-white/50 italic">
                         Note: {doc.reviewNotes}
                       </p>
                     )}
                     {doc.rejectedReason && (
-                      <p className="mt-1 text-xs text-red-600">
+                      <p className="mt-1 text-xs text-red-400">
                         Rejected: {doc.rejectedReason}
                       </p>
                     )}
@@ -310,7 +310,7 @@ export default async function SubcontractorProfilePage({ params }: Props) {
                       href={doc.downloadUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-shrink-0 inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700 mt-1"
+                      className="flex-shrink-0 inline-flex items-center gap-1 text-xs font-medium text-accent hover:text-accent-hover mt-1"
                     >
                       <Download size={12} />
                       Download
@@ -324,7 +324,7 @@ export default async function SubcontractorProfilePage({ params }: Props) {
       </div>
 
       {/* Metadata footer */}
-      <div className="text-xs text-gray-400 flex gap-4">
+      <div className="text-xs text-white/50 flex gap-4">
         {sub.invitedAt && <span>Invited {formatDate(sub.invitedAt)}</span>}
         {sub.activatedAt && <span>Activated {formatDate(sub.activatedAt)}</span>}
         {sub.notes && <span>Notes: {sub.notes}</span>}

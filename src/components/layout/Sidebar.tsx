@@ -29,14 +29,14 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-60 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+    <aside className="w-60 flex flex-col flex-shrink-0 border-r border-white/10" style={{ background: 'var(--app-bg2)' }}>
       {/* Logo */}
-      <div className="h-16 flex items-center px-5 border-b border-gray-200">
+      <div className="h-16 flex items-center px-5 border-b border-white/10">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
-            <ShieldCheck className="w-4.5 h-4.5 text-white" size={18} />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent/20 border border-accent/30">
+            <ShieldCheck className="w-4.5 h-4.5 text-accent" size={18} />
           </div>
-          <span className="font-semibold text-gray-900 text-[15px]">SubCompliant</span>
+          <span className="font-display font-bold text-white text-[15px]">Sub<span className="text-accent">Compliant</span></span>
         </div>
       </div>
 
@@ -49,18 +49,18 @@ export default function Sidebar() {
             className={cn(
               'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               isActive(href)
-                ? 'bg-brand-50 text-brand-700'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                ? 'bg-accent/15 text-accent border border-accent/25'
+                : 'text-white/70 hover:bg-white/5 hover:text-white'
             )}
           >
-            <Icon size={16} className={isActive(href) ? 'text-brand-600' : 'text-gray-400'} />
+            <Icon size={16} className={isActive(href) ? 'text-accent' : 'text-white/50'} />
             {label}
           </Link>
         ))}
       </nav>
 
       {/* Bottom nav */}
-      <div className="px-3 pb-4 space-y-0.5 border-t border-gray-100 pt-3">
+      <div className="px-3 pb-4 space-y-0.5 border-t border-white/10 pt-3">
         {BOTTOM.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
@@ -68,11 +68,11 @@ export default function Sidebar() {
             className={cn(
               'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               isActive(href)
-                ? 'bg-brand-50 text-brand-700'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                ? 'bg-accent/15 text-accent border border-accent/25'
+                : 'text-white/70 hover:bg-white/5 hover:text-white'
             )}
           >
-            <Icon size={16} className={isActive(href) ? 'text-brand-600' : 'text-gray-400'} />
+            <Icon size={16} className={isActive(href) ? 'text-accent' : 'text-white/50'} />
             {label}
           </Link>
         ))}

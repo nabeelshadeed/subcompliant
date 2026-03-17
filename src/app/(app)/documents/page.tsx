@@ -40,50 +40,51 @@ export default async function DocumentsPage({ searchParams }: Props) {
     .from(subcontractors)
     .where(eq(subcontractors.contractorId, contractorId))
 
-  const rows = await db
-    .select({
-      id:              complianceDocuments.id,
-      status:          complianceDocuments.status,
-      fileName:        complianceDocuments.fileName,
-      fileSizeBytes:   complianceDocuments.fileSizeBytes,
-      fileKey:         complianceDocuments.fileKey,
-      expiresAt:       complianceDocuments.expiresAt,
-      submittedAt:     complianceDocuments.submittedAt,
-      isVerified:      complianceDocuments.isVerified,
-      policyNumber:    complianceDocuments.policyNumber,
-      coverageAmount:  complianceDocuments.coverageAmount,
-      docTypeName:     documentTypes.name,
-      docTypeCategory: documentTypes.category,
-      subFirstName:    subProfiles.firstName,
-      subLastName:     subProfiles.lastName,
-      subCompanyName:  subProfiles.companyName,
-      profileId:       subProfiles.id,
-    })
-    .from(complianceDocuments)
-    .innerJoin(documentTypes,  eq(complianceDocuments.documentTypeId, documentTypes.id))
-    .innerJoin(subProfiles,    eq(complianceDocuments.profileId, subProfiles.id))
-    .where(and(
-      eq(complianceDocuments.isCurrent, true),
-      sql`${complianceDocuments.profileId} IN (${profileIdsSq})`,
-      sp.status   ? eq(complianceDocuments.status, sp.status as any)   : undefined,
-      sp.category ? eq(documentTypes.category, sp.category)            : undefined,
-      sp.q
-        ? sql`(${documentTypes.name} || ' ' || COALESCE(${subProfiles.firstName}, '') || ' ' || COALESCE(${subProfiles.lastName}, '')) ILIKE ${`%${sp.q}%`}`
-        : undefined,
-    ))
-    .orderBy(desc(complianceDocuments.submittedAt))
-    .limit(limit)
-    .offset(offset)
+  const listWhere = and(
+    eq(complianceDocuments.isCurrent, true),
+    sql`${complianceDocuments.profileId} IN (${profileIdsSq})`,
+    sp.status ? eq(complianceDocuments.status, sp.status as 'pending' | 'processing' | 'approved' | 'rejected' | 'expired' | 'superseded') : undefined,
+    sp.category ? eq(documentTypes.category, sp.category) : undefined,
+    sp.q
+      ? sql`(${documentTypes.name} || ' ' || COALESCE(${subProfiles.firstName}, '') || ' ' || COALESCE(${subProfiles.lastName}, '')) ILIKE ${`%${sp.q}%`}`
+      : undefined,
+  )
 
-  const [{ total }] = await db
-    .select({ total: sql<number>`count(*)::int` })
-    .from(complianceDocuments)
-    .innerJoin(documentTypes, eq(complianceDocuments.documentTypeId, documentTypes.id))
-    .innerJoin(subProfiles,   eq(complianceDocuments.profileId, subProfiles.id))
-    .where(and(
-      eq(complianceDocuments.isCurrent, true),
-      sql`${complianceDocuments.profileId} IN (${profileIdsSq})`,
-    ))
+  const [rows, countResult] = await Promise.all([
+    db
+      .select({
+        id:              complianceDocuments.id,
+        status:          complianceDocuments.status,
+        fileName:        complianceDocuments.fileName,
+        fileSizeBytes:   complianceDocuments.fileSizeBytes,
+        fileKey:         complianceDocuments.fileKey,
+        expiresAt:       complianceDocuments.expiresAt,
+        submittedAt:     complianceDocuments.submittedAt,
+        isVerified:      complianceDocuments.isVerified,
+        policyNumber:    complianceDocuments.policyNumber,
+        coverageAmount:  complianceDocuments.coverageAmount,
+        docTypeName:     documentTypes.name,
+        docTypeCategory: documentTypes.category,
+        subFirstName:    subProfiles.firstName,
+        subLastName:     subProfiles.lastName,
+        subCompanyName:  subProfiles.companyName,
+        profileId:       subProfiles.id,
+      })
+      .from(complianceDocuments)
+      .innerJoin(documentTypes,  eq(complianceDocuments.documentTypeId, documentTypes.id))
+      .innerJoin(subProfiles,    eq(complianceDocuments.profileId, subProfiles.id))
+      .where(listWhere)
+      .orderBy(desc(complianceDocuments.submittedAt))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(complianceDocuments)
+      .innerJoin(documentTypes, eq(complianceDocuments.documentTypeId, documentTypes.id))
+      .innerJoin(subProfiles,   eq(complianceDocuments.profileId, subProfiles.id))
+      .where(listWhere),
+  ])
+  const total = countResult[0]?.total ?? 0
 
   // Generate download URLs
   const rowsWithUrls = await Promise.all(
@@ -95,17 +96,22 @@ export default async function DocumentsPage({ searchParams }: Props) {
     }))
   )
 
-  // Counts per status for filter pills
+  // Counts per status for filter pills (same base filter; category and q don't change status counts)
   const statusCounts = await db
     .select({
       status: complianceDocuments.status,
       count:  sql<number>`count(*)::int`,
     })
     .from(complianceDocuments)
+    .innerJoin(documentTypes, eq(complianceDocuments.documentTypeId, documentTypes.id))
     .innerJoin(subProfiles, eq(complianceDocuments.profileId, subProfiles.id))
     .where(and(
       eq(complianceDocuments.isCurrent, true),
       sql`${complianceDocuments.profileId} IN (${profileIdsSq})`,
+      sp.category ? eq(documentTypes.category, sp.category) : undefined,
+      sp.q
+        ? sql`(${documentTypes.name} || ' ' || COALESCE(${subProfiles.firstName}, '') || ' ' || COALESCE(${subProfiles.lastName}, '')) ILIKE ${`%${sp.q}%`}`
+        : undefined,
     ))
     .groupBy(complianceDocuments.status)
 
@@ -116,8 +122,8 @@ export default async function DocumentsPage({ searchParams }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Documents</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{total} documents across all subcontractors</p>
+          <h1 className="text-xl font-bold font-display text-white">Documents</h1>
+          <p className="text-sm text-white/60 mt-0.5">{total} documents across all subcontractors</p>
         </div>
       </div>
 
@@ -160,44 +166,44 @@ export default async function DocumentsPage({ searchParams }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
+                <tr className="border-b border-white/10 bg-white/5">
                   {['Document', 'Subcontractor', 'Status', 'Expires', 'Uploaded', ''].map(h => (
-                    <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">
+                    <th key={h} className="text-left text-xs font-semibold text-white/60 uppercase tracking-wide px-5 py-3">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-white/10">
                 {rowsWithUrls.map(row => (
-                  <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={row.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                          row.docTypeCategory === 'insurance'    ? 'bg-blue-50' :
-                          row.docTypeCategory === 'certification'? 'bg-purple-50' :
-                          row.docTypeCategory === 'legal'        ? 'bg-orange-50' :
-                          'bg-gray-100'
+                          row.docTypeCategory === 'insurance'    ? 'bg-blue-500/20' :
+                          row.docTypeCategory === 'certification'? 'bg-purple-500/20' :
+                          row.docTypeCategory === 'legal'        ? 'bg-orange-500/20' :
+                          'bg-white/10'
                         }`}>
                           <FileText size={14} className={
-                            row.docTypeCategory === 'insurance'    ? 'text-blue-500' :
-                            row.docTypeCategory === 'certification'? 'text-purple-500' :
-                            row.docTypeCategory === 'legal'        ? 'text-orange-500' :
-                            'text-gray-400'
+                            row.docTypeCategory === 'insurance'    ? 'text-blue-400' :
+                            row.docTypeCategory === 'certification'? 'text-purple-400' :
+                            row.docTypeCategory === 'legal'        ? 'text-orange-400' :
+                            'text-white/50'
                           } />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{row.docTypeName}</p>
+                          <p className="font-medium text-white">{row.docTypeName}</p>
                           {row.fileName && (
-                            <p className="text-xs text-gray-400 truncate max-w-[180px]">{row.fileName}</p>
+                            <p className="text-xs text-white/50 truncate max-w-[180px]">{row.fileName}</p>
                           )}
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-sm text-gray-800">{row.subFirstName} {row.subLastName}</p>
+                      <p className="text-sm text-white">{row.subFirstName} {row.subLastName}</p>
                       {row.subCompanyName && (
-                        <p className="text-xs text-gray-400">{row.subCompanyName}</p>
+                        <p className="text-xs text-white/50">{row.subCompanyName}</p>
                       )}
                     </td>
                     <td className="px-5 py-3.5">
@@ -207,18 +213,18 @@ export default async function DocumentsPage({ searchParams }: Props) {
                       {row.expiresAt ? (
                         <span className={
                           new Date(row.expiresAt) < new Date()
-                            ? 'text-red-600 font-semibold'
+                            ? 'text-red-400 font-semibold'
                             : new Date(row.expiresAt) < new Date(Date.now() + 30 * 86400000)
-                            ? 'text-yellow-600 font-medium'
-                            : 'text-gray-500'
+                            ? 'text-amber-400 font-medium'
+                            : 'text-white/50'
                         }>
                           {formatDate(row.expiresAt)}
                         </span>
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-white/40">—</span>
                       )}
                     </td>
-                    <td className="px-5 py-3.5 text-xs text-gray-500">
+                    <td className="px-5 py-3.5 text-xs text-white/50">
                       {formatDate(row.submittedAt)}
                     </td>
                     <td className="px-5 py-3.5 text-right">
@@ -227,13 +233,13 @@ export default async function DocumentsPage({ searchParams }: Props) {
                           href={row.downloadUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:text-accent-hover"
                         >
                           <Download size={12} />
                           Download
                         </a>
                       ) : (
-                        <span className="text-xs text-gray-300">—</span>
+                        <span className="text-xs text-white/40">—</span>
                       )}
                     </td>
                   </tr>
@@ -244,15 +250,15 @@ export default async function DocumentsPage({ searchParams }: Props) {
 
           {/* Pagination */}
           {total > limit && (
-            <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">
-              <p className="text-xs text-gray-400">
+            <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">
+              <p className="text-xs text-white/50">
                 Showing {offset + 1}–{Math.min(offset + limit, total)} of {total}
               </p>
               <div className="flex gap-2">
                 {page > 1 && (
                   <Link
                     href={`?${new URLSearchParams({ ...sp, page: String(page - 1) })}`}
-                    className="px-3 py-1.5 text-xs font-medium border border-gray-200 rounded-lg hover:bg-gray-50"
+                    className="px-3 py-1.5 text-xs font-medium border border-white/20 rounded-lg hover:bg-white/10 text-white"
                   >
                     Previous
                   </Link>
@@ -260,7 +266,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
                 {offset + limit < total && (
                   <Link
                     href={`?${new URLSearchParams({ ...sp, page: String(page + 1) })}`}
-                    className="px-3 py-1.5 text-xs font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700"
+                    className="px-3 py-1.5 text-xs font-medium bg-accent text-[#0A0A0A] rounded-lg hover:bg-accent-hover"
                   >
                     Next
                   </Link>
@@ -282,12 +288,12 @@ function FilterPill({ href, label, count, active }: {
       href={href}
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
         active
-          ? 'bg-brand-600 text-white'
-          : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+          ? 'bg-accent text-[#0A0A0A]'
+          : 'bg-white/10 border border-white/20 text-white/80 hover:bg-white/15'
       }`}
     >
       {label}
-      <span className={`tabular-nums ${active ? 'text-brand-200' : 'text-gray-400'}`}>{count}</span>
+      <span className={`tabular-nums ${active ? 'text-[#0A0A0A]/80' : 'text-white/50'}`}>{count}</span>
     </Link>
   )
 }

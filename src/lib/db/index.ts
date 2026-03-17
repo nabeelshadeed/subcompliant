@@ -6,25 +6,53 @@ import * as relations from './relations'
 const fullSchema = { ...schema, ...relations }
 type FullSchema = typeof fullSchema
 
-// Use pooled connection for serverless (pgBouncer-compatible)
-const connectionString = process.env.NODE_ENV === 'production'
-  ? process.env.DATABASE_URL_POOLED!
-  : process.env.DATABASE_URL!
+function getConnectionString(): string {
+  const url = process.env.NODE_ENV === 'production'
+    ? process.env.DATABASE_URL_POOLED
+    : process.env.DATABASE_URL
+  if (!url?.trim()) {
+    throw new Error(
+      process.env.NODE_ENV === 'production'
+        ? 'DATABASE_URL_POOLED is not set. Add it in Cloudflare Workers → Settings → Variables and Secrets, then run db:push against Neon.'
+        : 'DATABASE_URL is not set. Add it to .env.local.'
+    )
+  }
+  return url
+}
 
-const client = postgres(connectionString, {
-  ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
-  max: process.env.NODE_ENV === 'production' ? 1 : 10,
-  idle_timeout: 20,
-  connect_timeout: 10,
-})
+let _client: ReturnType<typeof postgres> | null = null
+function getClient(): ReturnType<typeof postgres> {
+  if (!_client) {
+    const connectionString = getConnectionString()
+    _client = postgres(connectionString, {
+      ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
+      max: process.env.NODE_ENV === 'production' ? 1 : 10,
+      idle_timeout: 20,
+      connect_timeout: 10,
+    })
+  }
+  return _client
+}
 
-export const db: PostgresJsDatabase<FullSchema> = drizzle(client, {
-  schema: fullSchema,
-  logger: process.env.NODE_ENV === 'development',
+let _db: PostgresJsDatabase<FullSchema> | null = null
+function getDb(): PostgresJsDatabase<FullSchema> {
+  if (!_db) {
+    _db = drizzle(getClient(), {
+      schema: fullSchema,
+      logger: process.env.NODE_ENV === 'development',
+    })
+  }
+  return _db
+}
+
+export const db = new Proxy({} as PostgresJsDatabase<FullSchema>, {
+  get(_, prop) {
+    return (getDb() as any)[prop]
+  },
 })
 
 // Set RLS session variable for tenant isolation (non-transaction version)
 // Use this at the start of API route handlers that need RLS enforcement
 export async function setTenantContext(contractorId: string): Promise<void> {
-  await client`SELECT set_config('app.contractor_id', ${contractorId}, FALSE)`
+  await getClient()`SELECT set_config('app.contractor_id', ${contractorId}, FALSE)`
 }

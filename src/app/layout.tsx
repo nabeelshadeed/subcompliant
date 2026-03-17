@@ -1,6 +1,18 @@
 import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
+import { Syne, DM_Sans } from 'next/font/google'
 import './globals.css'
+
+const syne = Syne({
+  subsets: ['latin'],
+  variable: '--font-syne',
+  display: 'swap',
+})
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-dm-sans',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title:       { template: '%s | SubCompliant', default: 'SubCompliant — Subcontractor Compliance' },
@@ -10,8 +22,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className="bg-gray-50 text-gray-900 antialiased">
+      <html lang="en" className={`${syne.variable} ${dmSans.variable}`}>
+        <body className="bg-[#0A0A0A] text-white antialiased font-sans min-h-screen">
           {children}
         </body>
       </html>

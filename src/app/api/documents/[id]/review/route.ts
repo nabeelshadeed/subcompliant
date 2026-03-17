@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import crypto from 'crypto'
+import { addHours } from 'date-fns'
 import { db } from '@/lib/db'
-import { complianceDocuments, subcontractors, subProfiles, notifications } from '@/lib/db/schema'
+import { complianceDocuments, subcontractors, subProfiles, notifications, uploadSessions } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { getAuthContext, requireAdmin, logAudit } from '@/lib/auth/get-auth'
 import { enqueueJob } from '@/lib/redis'
@@ -79,23 +81,37 @@ export async function POST(
     .where(eq(complianceDocuments.id, id))
 
   // Notify sub by email
-  const profile = sub.profile as any
-  const appUrl  = process.env.NEXT_PUBLIC_APP_URL!
+  const profile = sub.profile as typeof subProfiles.$inferSelect & { ownerEmail: string; firstName: string; lastName: string }
+  const appUrl  = process.env.NEXT_PUBLIC_APP_URL ?? ''
 
   if (action === 'approve') {
     await sendDocumentApproved({
       to:          profile.ownerEmail,
       subName:     `${profile.firstName} ${profile.lastName}`,
-      docTypeName: (doc as any).documentType?.name ?? 'Document',
+      docTypeName: (doc as { documentType?: { name: string } }).documentType?.name ?? 'Document',
       reviewNotes,
     }).catch(() => {})
   } else {
+    // Create a new upload session so the sub gets a valid re-upload link
+    const reuploadToken = crypto.randomBytes(48).toString('base64url')
+    const reuploadExpiresAt = addHours(new Date(), 72)
+    await db.insert(uploadSessions).values({
+      token:             reuploadToken,
+      contractorId:      ctx.contractorId,
+      subcontractorId:   sub.id,
+      createdBy:         ctx.userId,
+      requiredDocTypeIds: doc.documentTypeId ? [doc.documentTypeId] : undefined,
+      expiresAt:         reuploadExpiresAt,
+      subEmail:          profile.ownerEmail,
+      subName:           `${profile.firstName} ${profile.lastName}`.trim() || undefined,
+      isSingleUse:       true,
+    })
     await sendDocumentRejected({
       to:             profile.ownerEmail,
       subName:        `${profile.firstName} ${profile.lastName}`,
-      docTypeName:    (doc as any).documentType?.name ?? 'Document',
-      rejectedReason: rejectedReason ?? 'Document did not meet requirements',
-      reuploadLink:   `${appUrl}/upload?sub=${profile.id}`,
+      docTypeName:     (doc as { documentType?: { name: string } }).documentType?.name ?? 'Document',
+      rejectedReason:  rejectedReason ?? 'Document did not meet requirements',
+      reuploadLink:    `${appUrl}/upload?t=${reuploadToken}`,
     }).catch(() => {})
   }
 
