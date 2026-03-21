@@ -7,7 +7,7 @@ import { getAuthContext } from '@/lib/auth/get-auth'
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
-  const { ctx, error } = await getAuthContext()
+  const { ctx, error } = await getAuthContext(req)
   if (error) return error
 
   const page   = parseInt(req.nextUrl.searchParams.get('page') ?? '1')

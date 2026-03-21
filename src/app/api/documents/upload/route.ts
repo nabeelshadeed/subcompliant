@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
 
   } else {
     // ── Authenticated mode (Clerk) ──────────────────────────────────────────
-    const { ctx, error } = await getAuthContext()
+    const { ctx, error } = await getAuthContext(req)
     if (error) return error
     contractorId = ctx.contractorId
     grantedBy    = ctx.userId

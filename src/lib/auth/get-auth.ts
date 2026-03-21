@@ -1,8 +1,8 @@
-import { auth } from '@clerk/nextjs/server'
+import { createClerkClient } from '@clerk/backend'
 import { db } from '@/lib/db'
 import { users, contractors, auditLogs } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export interface AuthContext {
   clerkUserId:  string
@@ -14,12 +14,23 @@ export interface AuthContext {
 
 /**
  * Resolve the authenticated Clerk session to a DB user + contractor.
- * Returns null + 401 response if unauthenticated or user not found.
+ * Uses @clerk/backend authenticateRequest() so it works in Cloudflare Workers
+ * where Next.js middleware header-forwarding doesn't propagate auth state.
  */
-export async function getAuthContext(): Promise<
+export async function getAuthContext(req: NextRequest): Promise<
   { ctx: AuthContext; error: null } | { ctx: null; error: NextResponse }
 > {
-  const { userId: clerkUserId } = await auth()
+  const clerk = createClerkClient({
+    secretKey:      process.env.CLERK_SECRET_KEY!,
+    publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!,
+  })
+
+  const requestState = await clerk.authenticateRequest(req, {
+    secretKey:      process.env.CLERK_SECRET_KEY!,
+    publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!,
+  })
+
+  const clerkUserId = requestState.isSignedIn ? requestState.toAuth().userId : null
 
   if (!clerkUserId) {
     return {

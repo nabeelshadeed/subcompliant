@@ -21,7 +21,7 @@ const schema = z.object({
 })
 
 export async function POST(req: NextRequest) {
-  const { ctx, error } = await getAuthContext()
+  const { ctx, error } = await getAuthContext(req)
   if (error) return error
 
   const adminError = requireAdmin(ctx)

@@ -19,9 +19,12 @@ const REQUIRED_ENV_VARS = [
   'CRON_SECRET',
 ] as const
 
-// Only validate on the server side — NEXT_PUBLIC_* vars are inlined at build
-// time and are always present on the client bundle.
-if (typeof window === 'undefined') {
+// Only validate at runtime, not during `next build`. During the build phase
+// Next.js statically renders pages without real secrets present, so throwing
+// here would break the build even on a correctly configured deployment.
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build'
+
+if (typeof window === 'undefined' && !isBuildPhase) {
   const missing = REQUIRED_ENV_VARS.filter(key => !process.env[key])
   if (missing.length > 0) {
     throw new Error(

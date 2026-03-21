@@ -5,7 +5,7 @@ import { createPortalSession } from '@/lib/stripe'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  const { ctx, error } = await getAuthContext()
+  const { ctx, error } = await getAuthContext(req)
   if (error) return error
 
   if (!ctx.contractor.stripeCustomerId) {

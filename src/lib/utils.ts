@@ -36,6 +36,15 @@ export function initials(first?: string | null, last?: string | null): string {
   return `${(first ?? '?')[0] ?? ''}${(last ?? '')[0] ?? ''}`.toUpperCase()
 }
 
+/** Build query string from params, omitting undefined and empty values to avoid ?key=undefined */
+export function buildQueryString(params: Record<string, string | undefined>): string {
+  const filtered = Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v != null && v !== '')
+  ) as Record<string, string>
+  const qs = new URLSearchParams(filtered).toString()
+  return qs ? `?${qs}` : ''
+}
+
 export function complianceColor(status: string): string {
   switch (status) {
     case 'compliant':           return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30'

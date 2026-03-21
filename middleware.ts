@@ -49,19 +49,18 @@ export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     const { userId } = await auth()
     if (!userId) {
+      // API routes should return 401, not redirect
+      if (isApiRoute(req)) {
+        return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } }, { status: 401 })
+      }
       const signInUrl = new URL('/auth/sign-in', req.url)
       signInUrl.searchParams.set('redirect_url', req.url)
       return NextResponse.redirect(signInUrl)
     }
   }
 
-  // Attach CORS headers to all non-webhook API responses.
-  if (isApiRoute(req) && !isWebhookRoute(req)) {
-    const res = NextResponse.next()
-    const h = corsHeaders(req)
-    Object.entries(h).forEach(([k, v]) => res.headers.set(k, v))
-    return res
-  }
+  // Let Clerk's middleware fall through naturally — do NOT return NextResponse.next()
+  // here for API routes, as it overwrites Clerk's injected auth headers in Workers.
 })
 
 export const config = {

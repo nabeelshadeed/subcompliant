@@ -5,7 +5,7 @@ import { users, subcontractors, subProfiles, riskScores } from '@/lib/db/schema'
 import { eq, and, inArray, desc, sql } from 'drizzle-orm'
 import Link from 'next/link'
 import { ComplianceBadge, RiskBadge } from '@/components/ui/Badges'
-import { formatDate, formatRelative, initials } from '@/lib/utils'
+import { formatDate, formatRelative, initials, buildQueryString } from '@/lib/utils'
 import SubcontractorsClient from './SubcontractorsClient'
 import EmptyState from '@/components/ui/EmptyState'
 import { Users } from 'lucide-react'
@@ -172,7 +172,7 @@ export default async function SubcontractorList({ searchParams }: Props) {
               <div className="flex gap-2">
                 {page > 1 && (
                   <Link
-                    href={`?${new URLSearchParams({ ...searchParams, page: String(page - 1) })}`}
+                    href={buildQueryString({ ...searchParams, page: String(page - 1) })}
                     className="px-3 py-1.5 text-xs font-medium border border-white/20 rounded-lg hover:bg-white/10 text-white"
                   >
                     Previous
@@ -180,7 +180,7 @@ export default async function SubcontractorList({ searchParams }: Props) {
                 )}
                 {offset + limit < total && (
                   <Link
-                    href={`?${new URLSearchParams({ ...searchParams, page: String(page + 1) })}`}
+                    href={buildQueryString({ ...searchParams, page: String(page + 1) })}
                     className="px-3 py-1.5 text-xs font-medium bg-accent text-[#0A0A0A] rounded-lg hover:bg-accent-hover"
                   >
                     Next

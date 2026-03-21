@@ -11,7 +11,7 @@ import { addHours } from 'date-fns'
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
-  const { ctx, error } = await getAuthContext()
+  const { ctx, error } = await getAuthContext(req)
   if (error) return error
 
   const search = req.nextUrl.searchParams.get('q')
@@ -81,7 +81,7 @@ const inviteSchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
-  const { ctx, error } = await getAuthContext()
+  const { ctx, error } = await getAuthContext(req)
   if (error) return error
 
   const adminError = requireAdmin(ctx)

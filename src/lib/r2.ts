@@ -61,6 +61,6 @@ export async function deleteFromR2(key: string): Promise<void> {
 }
 
 export async function hashBuffer(buf: Buffer): Promise<string> {
-  const digest = await globalThis.crypto.subtle.digest('SHA-256', buf)
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer)
   return Buffer.from(digest).toString('hex')
 }

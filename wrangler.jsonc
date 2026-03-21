@@ -23,10 +23,5 @@
     "enabled": true,
     "head_sampling_rate": 1
   },
-  // Cloudflare Workers hard limit is 30 000 ms CPU time on paid plans.
-  // Setting it explicitly here makes the limit visible and prevents surprises
-  // when the compliance overview query runs over many subcontractors.
-  "limits": {
-    "cpu_ms": 30000
-  }
+  // "limits": { "cpu_ms": 30000 }  -- paid plans only; uncomment after upgrading
 }

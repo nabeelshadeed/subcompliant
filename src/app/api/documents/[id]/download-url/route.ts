@@ -8,11 +8,11 @@ import { getPresignedDownloadUrl } from '@/lib/r2'
 export const dynamic = 'force-dynamic'
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const { ctx, error } = await getAuthContext()
+  const { ctx, error } = await getAuthContext(req)
   if (error) return error
 
   const doc = await db.query.complianceDocuments.findFirst({
