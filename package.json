@@ -19,6 +19,7 @@
     "@aws-sdk/client-textract": "^3.600.0",
     "@aws-sdk/s3-request-presigner": "^3.600.0",
     "@clerk/nextjs": "^5.2.0",
+    "@clerk/themes": "^2.4.57",
     "@neondatabase/serverless": "^0.9.3",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.4",
