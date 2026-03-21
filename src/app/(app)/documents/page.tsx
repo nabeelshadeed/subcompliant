@@ -4,13 +4,13 @@ import { db } from '@/lib/db'
 import { users, complianceDocuments, documentTypes, subProfiles, subcontractors } from '@/lib/db/schema'
 import { eq, and, desc, ilike, sql } from 'drizzle-orm'
 import { DocStatusBadge } from '@/components/ui/Badges'
-import { formatDate, formatBytes } from '@/lib/utils'
-import { FileText, Download } from 'lucide-react'
+import { formatDate, formatBytes, buildQueryString } from '@/lib/utils'
+import { FileText } from 'lucide-react'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import EmptyState from '@/components/ui/EmptyState'
 import DocumentFilters from '@/components/documents/DocumentFilters'
-import { getPresignedDownloadUrl } from '@/lib/r2'
+import { DownloadButton } from '@/components/documents/DownloadButton'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Documents' }
@@ -86,16 +86,6 @@ export default async function DocumentsPage({ searchParams }: Props) {
   ])
   const total = countResult[0]?.total ?? 0
 
-  // Generate download URLs
-  const rowsWithUrls = await Promise.all(
-    rows.map(async r => ({
-      ...r,
-      downloadUrl: r.fileKey && r.status === 'approved'
-        ? await getPresignedDownloadUrl(r.fileKey).catch(() => null)
-        : null,
-    }))
-  )
-
   // Counts per status for filter pills (same base filter; category and q don't change status counts)
   const statusCounts = await db
     .select({
@@ -153,7 +143,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
       </div>
 
       {/* Table */}
-      {rowsWithUrls.length === 0 ? (
+      {rows.length === 0 ? (
         <div className="card">
           <EmptyState
             icon={FileText}
@@ -175,7 +165,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
-                {rowsWithUrls.map(row => (
+                {rows.map(row => (
                   <tr key={row.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
@@ -228,16 +218,8 @@ export default async function DocumentsPage({ searchParams }: Props) {
                       {formatDate(row.submittedAt)}
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      {row.downloadUrl ? (
-                        <a
-                          href={row.downloadUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:text-accent-hover"
-                        >
-                          <Download size={12} />
-                          Download
-                        </a>
+                      {row.fileKey && row.status === 'approved' ? (
+                        <DownloadButton documentId={row.id} />
                       ) : (
                         <span className="text-xs text-white/40">—</span>
                       )}
@@ -257,7 +239,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
               <div className="flex gap-2">
                 {page > 1 && (
                   <Link
-                    href={`?${new URLSearchParams({ ...sp, page: String(page - 1) })}`}
+                    href={buildQueryString({ ...sp, page: String(page - 1) })}
                     className="px-3 py-1.5 text-xs font-medium border border-white/20 rounded-lg hover:bg-white/10 text-white"
                   >
                     Previous
@@ -265,7 +247,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
                 )}
                 {offset + limit < total && (
                   <Link
-                    href={`?${new URLSearchParams({ ...sp, page: String(page + 1) })}`}
+                    href={buildQueryString({ ...sp, page: String(page + 1) })}
                     className="px-3 py-1.5 text-xs font-medium bg-accent text-[#0A0A0A] rounded-lg hover:bg-accent-hover"
                   >
                     Next

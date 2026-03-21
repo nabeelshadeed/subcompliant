@@ -132,3 +132,46 @@ export async function sendDocumentRejected(params: {
     `,
   })
 }
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+/** Send contact form submission to the team and optional auto-reply to the user */
+export async function sendContactSubmission(params: {
+  name:    string
+  email:   string
+  subject: string
+  message: string
+}) {
+  const to = process.env.CONTACT_EMAIL || process.env.EMAIL_FROM || 'noreply@subcompliant.co.uk'
+  const safeSubject = escapeHtml(params.subject)
+  const safeMessage = escapeHtml(params.message).replace(/\n/g, '<br>')
+  const safeName    = escapeHtml(params.name)
+  const safeEmail   = escapeHtml(params.email)
+
+  return getResend().emails.send({
+    from:      FROM(),
+    to:        to,
+    reply_to:  params.email,
+    subject: `[Contact] ${params.subject} — ${params.name}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#111">
+        <div style="background:#0A0A0A;padding:24px 32px;border-radius:8px 8px 0 0">
+          <h1 style="color:#fff;margin:0;font-size:22px">New contact form submission</h1>
+        </div>
+        <div style="border:1px solid #e5e7eb;border-top:none;padding:32px;border-radius:0 0 8px 8px">
+          <p><strong>From:</strong> ${safeName} &lt;${safeEmail}&gt;</p>
+          <p><strong>Subject:</strong> ${safeSubject}</p>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0" />
+          <div style="white-space:pre-wrap">${safeMessage || '(No message)'}</div>
+        </div>
+      </div>
+    `,
+  })
+}

@@ -15,6 +15,10 @@ const R2_BUCKET = process.env.R2_BUCKET_NAME!
 const POLL_MS   = 2000
 const MAX_RETRY = 3
 
+// Documents with OCR confidence below this threshold are kept in 'pending'
+// status for manual review instead of being auto-approved.
+const MIN_OCR_CONFIDENCE = 0.70
+
 interface ProcessDocumentPayload {
   documentId:   string
   profileId:    string
@@ -51,6 +55,23 @@ async function processDocument(payload: ProcessDocumentPayload): Promise<void> {
       } catch (ocrErr) {
         console.warn(`[worker] Textract failed (non-fatal):`, ocrErr)
       }
+    }
+
+    // Low-confidence OCR means the document may be unreadable or corrupt.
+    // Keep it in 'pending' so a human can review instead of auto-approving.
+    const lowConfidence = extractedData && extractionConfidence > 0 && extractionConfidence < MIN_OCR_CONFIDENCE
+    if (lowConfidence) {
+      console.warn(`[worker] Document ${documentId} OCR confidence too low (${extractionConfidence.toFixed(2)} < ${MIN_OCR_CONFIDENCE}) — flagging for manual review`)
+      await db.update(complianceDocuments)
+        .set({
+          status:               'pending',
+          processedAt:          new Date(),
+          extractedData,
+          extractionConfidence: extractionConfidence.toString(),
+        })
+        .where(eq(complianceDocuments.id, documentId))
+      await enqueueJob('calculate_risk_score', { profileId, contractorId })
+      return
     }
 
     await db.update(complianceDocuments)

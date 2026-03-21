@@ -8,7 +8,6 @@ import { eq, and } from 'drizzle-orm'
 import { uploadToR2, generateDocKey, hashBuffer } from '@/lib/r2'
 import { enqueueJob, rateLimit } from '@/lib/redis'
 import { getAuthContext, logAudit } from '@/lib/auth/get-auth'
-import crypto from 'crypto'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,6 +45,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: { code: 'SESSION_INVALID', message: 'Invalid or expired upload link' } }, { status: 401 })
     }
 
+    if (session.isSingleUse && session.usedAt) {
+      return NextResponse.json({ error: { code: 'LINK_USED', message: 'This upload link has already been used.' } }, { status: 410 })
+    }
+
     contractorId = session.contractorId
 
     // Get or create sub profile from session info
@@ -58,7 +61,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (!profile) {
-      const shareToken = crypto.randomBytes(32).toString('base64url')
+      const shareToken = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(32))).toString('base64url')
       const [created] = await db.insert(subProfiles).values({
         shareToken,
         ownerEmail: subEmail!,
@@ -155,7 +158,7 @@ export async function POST(req: NextRequest) {
   }
 
   const buffer  = Buffer.from(await file.arrayBuffer())
-  const fileHash = hashBuffer(buffer)
+  const fileHash = await hashBuffer(buffer)
 
   // Check for exact duplicate (same hash, same profile, same type)
   const existing = await db.query.complianceDocuments.findFirst({
@@ -224,12 +227,13 @@ export async function POST(req: NextRequest) {
     resourceType: 'compliance_document',
     resourceId: doc.id,
     payload: {
+      // Omit fileName: it often contains the subject's real name (PII).
+      // The document record itself (resourceId) links back to the file.
       profileId,
       documentTypeId: docTypeId,
-      fileName: file.name,
-      fileSizeBytes: file.size,
-      mimeType: file.type,
-      uploadMode: uploadToken ? 'magic_link' : 'authenticated',
+      fileSizeBytes:  file.size,
+      mimeType:       file.type,
+      uploadMode:     uploadToken ? 'magic_link' : 'authenticated',
     },
     ipAddress: ip,
   })

@@ -26,9 +26,14 @@ function getClient(): ReturnType<typeof postgres> {
     const connectionString = getConnectionString()
     _client = postgres(connectionString, {
       ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
+      // max:1 keeps one connection per Worker isolate — correct for serverless
       max: process.env.NODE_ENV === 'production' ? 1 : 10,
       idle_timeout: 20,
       connect_timeout: 10,
+      // Required when using a connection pooler (Neon, PgBouncer in transaction
+      // mode): poolers do not support the extended query protocol that prepared
+      // statements rely on, so disable them for the pooled production URL.
+      prepare: process.env.NODE_ENV !== 'production',
     })
   }
   return _client

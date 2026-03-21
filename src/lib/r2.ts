@@ -1,6 +1,5 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import crypto from 'crypto'
 
 function getR2(): S3Client {
   return new S3Client({
@@ -19,7 +18,7 @@ function getBucket(): string {
 
 export function generateDocKey(profileId: string, docTypeSlug: string, filename: string): string {
   const ext = filename.split('.').pop() ?? 'bin'
-  const rand = crypto.randomBytes(8).toString('hex')
+  const rand = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(8))).toString('hex')
   return `docs/${profileId}/${docTypeSlug}/${rand}.${ext}`
 }
 
@@ -61,6 +60,7 @@ export async function deleteFromR2(key: string): Promise<void> {
   await getR2().send(new DeleteObjectCommand({ Bucket: getBucket(), Key: key }))
 }
 
-export function hashBuffer(buf: Buffer): string {
-  return crypto.createHash('sha256').update(buf).digest('hex')
+export async function hashBuffer(buf: Buffer): Promise<string> {
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', buf)
+  return Buffer.from(digest).toString('hex')
 }

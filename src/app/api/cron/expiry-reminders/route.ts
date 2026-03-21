@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
 import { addDays, addHours } from 'date-fns'
 import { db } from '@/lib/db'
 import { complianceDocuments, subProfiles, subcontractors, notifications, uploadSessions } from '@/lib/db/schema'
@@ -72,7 +71,7 @@ export async function GET(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
     let uploadLink = `${appUrl}/upload`
     try {
-      const token = crypto.randomBytes(48).toString('base64url')
+      const token = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(48))).toString('base64url')
       await db.insert(uploadSessions).values({
         token:               token,
         contractorId:        doc.contractorId,
@@ -120,17 +119,19 @@ export async function GET(req: NextRequest) {
   // Mark already expired docs as expired and emit a one-time alert
   const expiredDocs = await db
     .select({
-      docId:       complianceDocuments.id,
-      profileId:   complianceDocuments.profileId,
-      ownerEmail:  subProfiles.ownerEmail,
-      firstName:   subProfiles.firstName,
-      lastName:    subProfiles.lastName,
-      docTypeName: sql<string>`(
+      docId:        complianceDocuments.id,
+      profileId:    complianceDocuments.profileId,
+      contractorId: subcontractors.contractorId,
+      ownerEmail:   subProfiles.ownerEmail,
+      firstName:    subProfiles.firstName,
+      lastName:     subProfiles.lastName,
+      docTypeName:  sql<string>`(
         SELECT name FROM document_types WHERE id = ${complianceDocuments.documentTypeId}
       )`,
     })
     .from(complianceDocuments)
     .innerJoin(subProfiles, eq(complianceDocuments.profileId, subProfiles.id))
+    .innerJoin(subcontractors, eq(subcontractors.profileId, complianceDocuments.profileId))
     .where(and(
       eq(complianceDocuments.status, 'approved'),
       eq(complianceDocuments.isCurrent, true),
@@ -157,6 +158,7 @@ export async function GET(req: NextRequest) {
     if (alreadyAlerted) continue
 
     await db.insert(notifications).values({
+      contractorId:   doc.contractorId,
       profileId:      doc.profileId,
       documentId:     doc.docId,
       eventType:      'document_expired',

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import crypto from 'crypto'
 import { addHours } from 'date-fns'
 import { db } from '@/lib/db'
 import { complianceDocuments, subcontractors, subProfiles, notifications, uploadSessions } from '@/lib/db/schema'
@@ -93,7 +92,7 @@ export async function POST(
     }).catch(() => {})
   } else {
     // Create a new upload session so the sub gets a valid re-upload link
-    const reuploadToken = crypto.randomBytes(48).toString('base64url')
+    const reuploadToken = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(48))).toString('base64url')
     const reuploadExpiresAt = addHours(new Date(), 72)
     await db.insert(uploadSessions).values({
       token:             reuploadToken,

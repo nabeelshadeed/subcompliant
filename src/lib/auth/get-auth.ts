@@ -94,5 +94,5 @@ export function logAudit(params: {
     resourceId:   params.resourceId,
     payload:      params.payload ?? null,
     ipAddress:    params.ipAddress,
-  }).catch(() => {}) // fire-and-forget
+  }).catch(err => console.error('[audit-log-fail]', { action: params.action, resourceId: params.resourceId, err })) // fire-and-forget
 }

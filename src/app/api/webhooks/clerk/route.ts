@@ -3,6 +3,7 @@ import { Webhook } from 'svix'
 import { db } from '@/lib/db'
 import { users, contractors } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { cacheGet, cacheSet } from '@/lib/redis'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +29,14 @@ export async function POST(req: NextRequest) {
     })
   } catch {
     return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 })
+  }
+
+  // Idempotency: svix-id is unique per delivery attempt. Clerk retries on 5xx
+  // so without this a single event could create duplicate user/org records.
+  const dedupKey = `webhook:clerk:${svixId}`
+  const alreadyProcessed = await cacheGet<boolean>(dedupKey)
+  if (alreadyProcessed) {
+    return NextResponse.json({ received: true })
   }
 
   const { type, data } = event
@@ -117,6 +126,8 @@ export async function POST(req: NextRequest) {
       // Ignore unhandled events
       break
   }
+
+  await cacheSet(dedupKey, true, 86400)
 
   return NextResponse.json({ received: true })
 }

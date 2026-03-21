@@ -5,8 +5,8 @@ import { uploadSessions, documentTypes } from '@/lib/db/schema'
 import { inArray } from 'drizzle-orm'
 import { getAuthContext, requireAdmin } from '@/lib/auth/get-auth'
 import { sendMagicLinkInvite } from '@/lib/resend'
+import { rateLimit } from '@/lib/redis'
 import { addHours } from 'date-fns'
-import crypto from 'crypto'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,6 +26,14 @@ export async function POST(req: NextRequest) {
 
   const adminError = requireAdmin(ctx)
   if (adminError) return adminError
+
+  const rl = await rateLimit(`magic-link:${ctx.contractorId}`, 50, 3600)
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: { code: 'RATE_LIMITED', message: 'Too many invites sent. Try again in an hour.' } },
+      { status: 429 }
+    )
+  }
 
   const body   = await req.json().catch(() => null)
   const parsed = schema.safeParse(body)
@@ -47,7 +55,7 @@ export async function POST(req: NextRequest) {
     docTypeNames = types.map(t => t.name)
   }
 
-  const token     = crypto.randomBytes(48).toString('base64url')
+  const token     = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(48))).toString('base64url')
   const expiresAt = addHours(new Date(), data.expiryHours)
 
   const [session] = await db.insert(uploadSessions).values({

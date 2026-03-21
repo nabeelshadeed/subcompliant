@@ -1,5 +1,4 @@
 import { Redis } from '@upstash/redis'
-import crypto from 'crypto'
 
 function getRedis(): Redis {
   return new Redis({
@@ -30,7 +29,7 @@ const RATE_LIMIT_PREFIX= 'subcompliant:rl'
 
 export async function enqueueJob<T>(type: JobType, payload: T): Promise<string> {
   const job: Job<T> = {
-    id:        crypto.randomUUID(),
+    id:        globalThis.crypto.randomUUID(),
     type,
     payload,
     createdAt: Date.now(),

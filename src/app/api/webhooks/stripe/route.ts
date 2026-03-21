@@ -4,6 +4,7 @@ import { planFromPriceId, constructWebhookEvent } from '@/lib/stripe'
 import { db } from '@/lib/db'
 import { contractors } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { cacheGet, cacheSet } from '@/lib/redis'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,6 +28,14 @@ export async function POST(req: NextRequest) {
     event = constructWebhookEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch {
     return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 })
+  }
+
+  // Idempotency: Stripe retries webhooks for up to 72h on 5xx. Skip events we
+  // have already processed to prevent double-applying plan changes or downgrades.
+  const dedupKey = `webhook:stripe:${event.id}`
+  const alreadyProcessed = await cacheGet<boolean>(dedupKey)
+  if (alreadyProcessed) {
+    return NextResponse.json({ received: true })
   }
 
   const data = event.data.object as any
@@ -81,6 +90,10 @@ export async function POST(req: NextRequest) {
       break
     }
   }
+
+  // Mark event processed after successful handling (24h is enough; Stripe stops
+  // retrying after 72h but dedup prevents any double-fire within that window).
+  await cacheSet(dedupKey, true, 86400)
 
   return NextResponse.json({ received: true })
 }
