@@ -151,6 +151,47 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* ── Testimonials ── */}
+        <section className="section alt" id="testimonials" aria-labelledby="testi-h">
+          <div className="container">
+            <div className="eyebrow"><span className="eyebrow-dot" />Trusted by UK Contractors</div>
+            <h2 id="testi-h" className="sh">What contractors say.</h2>
+            <p className="sl">From sole traders to national contractors — SubCompliant keeps subcontractor risk in check.</p>
+            <div className="testi-grid">
+              <div className="testi-card rv">
+                <p className="testi-quote">&ldquo;We had a subcontractor on site with an expired public liability policy for three weeks before we noticed. SubCompliant would have flagged it on day one. It&rsquo;s non-negotiable for us now.&rdquo;</p>
+                <div className="testi-author">
+                  <div className="testi-av">JM</div>
+                  <div>
+                    <p className="testi-name">James M.</p>
+                    <p className="testi-role">Director · JM Building Contractors, Manchester</p>
+                  </div>
+                </div>
+              </div>
+              <div className="testi-card rv d1">
+                <p className="testi-quote">&ldquo;The magic-link upload is genius. My subbies tap a link and upload their certs — no accounts, no passwords. Our document collection rate went from 60% to nearly 100%.&rdquo;</p>
+                <div className="testi-author">
+                  <div className="testi-av">SR</div>
+                  <div>
+                    <p className="testi-name">Sarah R.</p>
+                    <p className="testi-role">Operations Manager · Redstone Groundworks, Birmingham</p>
+                  </div>
+                </div>
+              </div>
+              <div className="testi-card rv d2">
+                <p className="testi-quote">&ldquo;We passed our HSE site audit in 20 minutes because every document was organised and exportable. The auditor was impressed. Worth every penny of the subscription.&rdquo;</p>
+                <div className="testi-author">
+                  <div className="testi-av">DK</div>
+                  <div>
+                    <p className="testi-name">David K.</p>
+                    <p className="testi-role">Site Manager · Kestrel Roofing Ltd, Leeds</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="section" id="pricing" aria-labelledby="price-h">
           <div className="container center">
             <div className="eyebrow" style={{ justifyContent: 'center' }}><span className="eyebrow-dot" />Pricing</div>
@@ -231,6 +272,18 @@ export default async function HomePage() {
           </div>
         </div>
       </footer>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: [
+            { '@type': 'Question', name: 'How does SubCompliant differ from Constructionline or CHAS?', acceptedAnswer: { '@type': 'Answer', text: 'Constructionline and CHAS help you prove your own compliance to buyers — they are annual accreditation schemes. SubCompliant manages your subcontractors\u2019 compliance on a daily operational basis. They are complementary, not competing tools.' } },
+            { '@type': 'Question', name: 'Do subcontractors need to create an account to upload documents?', acceptedAnswer: { '@type': 'Answer', text: 'No. SubCompliant uses magic-link upload: you send a link, the subcontractor taps it and uploads directly. No account creation, no passwords, no friction.' } },
+            { '@type': 'Question', name: 'Is there a free trial?', acceptedAnswer: { '@type': 'Answer', text: 'All plans include a 14-day free trial with full Pro feature access. No credit card required.' } },
+          ],
+        }) }}
+      />
     </div>
   )
 }

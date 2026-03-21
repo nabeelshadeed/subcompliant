@@ -89,6 +89,29 @@ export default async function DashboardPage() {
         </p>
       </div>
 
+      {/* Onboarding CTA — only shown when account is brand new */}
+      {totalSubs === 0 && (
+        <div className="card p-6 border border-accent/20 bg-accent/5">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center flex-shrink-0">
+              <TrendingUp size={18} className="text-accent" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-sm font-semibold text-white mb-1">Get started in 3 steps</h2>
+              <p className="text-sm text-white/60 mb-4">Add your first subcontractor, send them a magic-link invite, and approve their documents — your compliance dashboard will populate automatically.</p>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/subcontractors" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-[#0A0A0A] text-sm font-semibold hover:bg-accent/90 transition-colors">
+                  <Users size={14} /> Add first subcontractor
+                </Link>
+                <Link href="/documents" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm font-medium hover:bg-white/15 transition-colors">
+                  <FileText size={14} /> View documents
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard

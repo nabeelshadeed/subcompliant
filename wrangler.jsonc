@@ -17,6 +17,10 @@
   "images": {
     "binding": "IMAGES"
   },
+  // Public env vars baked into the Worker at deploy time (not secrets).
+  "vars": {
+    "NEXT_PUBLIC_APP_URL": "https://subcompliant.skypathwayz.workers.dev"
+  },
   // Emit structured logs visible in `wrangler tail` and the CF dashboard.
   // head_sampling_rate: 1 = capture every request (reduce in high-traffic prod).
   "observability": {

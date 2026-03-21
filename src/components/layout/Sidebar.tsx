@@ -4,24 +4,24 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, ShieldCheck, FileText,
-  Bell, Settings, CreditCard, ChevronRight, Building2
+  Bell, Settings, CreditCard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV = [
-  { href: '/dashboard',         label: 'Dashboard',       icon: LayoutDashboard },
-  { href: '/subcontractors',    label: 'Subcontractors',  icon: Users },
-  { href: '/compliance',        label: 'Compliance',      icon: ShieldCheck },
-  { href: '/documents',         label: 'Documents',       icon: FileText },
-  { href: '/notifications',     label: 'Notifications',   icon: Bell },
+  { href: '/dashboard',      label: 'Dashboard',      icon: LayoutDashboard, badge: false },
+  { href: '/subcontractors', label: 'Subcontractors', icon: Users,           badge: false },
+  { href: '/compliance',     label: 'Compliance',     icon: ShieldCheck,     badge: false },
+  { href: '/documents',      label: 'Documents',      icon: FileText,        badge: false },
+  { href: '/notifications',  label: 'Notifications',  icon: Bell,            badge: true  },
 ]
 
 const BOTTOM = [
-  { href: '/settings/billing',  label: 'Billing',         icon: CreditCard },
-  { href: '/settings',          label: 'Settings',        icon: Settings },
+  { href: '/settings/billing', label: 'Billing',  icon: CreditCard },
+  { href: '/settings',         label: 'Settings', icon: Settings   },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ recentNotifCount = 0 }: { recentNotifCount?: number }) {
   const pathname = usePathname()
 
   function isActive(href: string) {
@@ -42,7 +42,7 @@ export default function Sidebar() {
 
       {/* Primary nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {NAV.map(({ href, label, icon: Icon }) => (
+        {NAV.map(({ href, label, icon: Icon, badge }) => (
           <Link
             key={href}
             href={href}
@@ -54,7 +54,12 @@ export default function Sidebar() {
             )}
           >
             <Icon size={16} className={isActive(href) ? 'text-accent' : 'text-white/50'} />
-            {label}
+            <span className="flex-1">{label}</span>
+            {badge && recentNotifCount > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-[#0A0A0A] text-[10px] font-bold leading-none">
+                {recentNotifCount > 99 ? '99+' : recentNotifCount}
+              </span>
+            )}
           </Link>
         ))}
       </nav>
