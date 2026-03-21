@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { getServerUserId } from '@/lib/auth/get-auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { users, contractors } from '@/lib/db/schema'
@@ -11,7 +11,7 @@ import { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Settings' }
 
 export default async function SettingsPage() {
-  const { userId: clerkUserId } = await auth()
+  const clerkUserId = await getServerUserId()
   if (!clerkUserId) redirect('/auth/sign-in')
 
   const user = await db.query.users.findFirst({

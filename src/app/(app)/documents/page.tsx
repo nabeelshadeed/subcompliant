@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { getServerUserId } from '@/lib/auth/get-auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { users, complianceDocuments, documentTypes, subProfiles, subcontractors } from '@/lib/db/schema'
@@ -22,7 +22,7 @@ interface Props {
 const STATUSES   = ['pending', 'processing', 'approved', 'rejected', 'expired']
 
 export default async function DocumentsPage({ searchParams }: Props) {
-  const { userId: clerkUserId } = await auth()
+  const clerkUserId = await getServerUserId()
   if (!clerkUserId) redirect('/auth/sign-in')
 
   const user = await db.query.users.findFirst({ where: eq(users.clerkUserId, clerkUserId) })

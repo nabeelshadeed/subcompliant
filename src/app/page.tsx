@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { getServerUserId } from '@/lib/auth/get-auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { HomepageClient } from '@/components/HomepageClient'
@@ -6,7 +6,7 @@ import './homepage.css'
 
 export default async function HomePage() {
   try {
-    const { userId } = await auth()
+    const userId = await getServerUserId()
     if (userId) redirect('/dashboard')
   } catch {
     // Clerk unavailable — still show homepage

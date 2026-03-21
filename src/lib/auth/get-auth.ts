@@ -2,7 +2,38 @@ import { createClerkClient } from '@clerk/backend'
 import { db } from '@/lib/db'
 import { users, contractors, auditLogs } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+
+/**
+ * Authenticate from server components / pages using next/headers.
+ * Works in Cloudflare Workers where middleware→handler header propagation is broken.
+ */
+export async function getServerUserId(): Promise<string | null> {
+  const headerStore = await headers()
+  const cookieHeader = headerStore.get('cookie') ?? ''
+  const host   = headerStore.get('host') ?? 'localhost'
+  const proto  = headerStore.get('x-forwarded-proto') ?? 'https'
+
+  const fakeReq = new Request(`${proto}://${host}/`, {
+    headers: { cookie: cookieHeader },
+  })
+
+  const clerk = createClerkClient({
+    secretKey:      process.env.CLERK_SECRET_KEY!,
+    publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!,
+  })
+
+  try {
+    const state = await clerk.authenticateRequest(fakeReq, {
+      secretKey:      process.env.CLERK_SECRET_KEY!,
+      publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!,
+    })
+    return state.isSignedIn ? state.toAuth().userId : null
+  } catch {
+    return null
+  }
+}
 
 export interface AuthContext {
   clerkUserId:  string

@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { getServerUserId } from '@/lib/auth/get-auth'
 import { redirect, notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import {
@@ -23,7 +23,7 @@ interface Props { params: Promise<{ id: string }> }
 export const metadata: Metadata = { title: 'Subcontractor Profile' }
 
 export default async function SubcontractorProfilePage({ params }: Props) {
-  const { userId: clerkUserId } = await auth()
+  const clerkUserId = await getServerUserId()
   if (!clerkUserId) redirect('/auth/sign-in')
 
   const { id } = await params

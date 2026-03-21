@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { getServerUserId } from '@/lib/auth/get-auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { users, contractors, subcontractors, complianceDocuments, notifications, documentTypes } from '@/lib/db/schema'
@@ -15,7 +15,7 @@ import Link from 'next/link'
 import DashboardClient from './DashboardClient'
 
 export default async function DashboardPage() {
-  const { userId: clerkUserId } = await auth()
+  const clerkUserId = await getServerUserId()
   if (!clerkUserId) redirect('/auth/sign-in')
 
   let user: Awaited<ReturnType<typeof db.query.users.findFirst>>

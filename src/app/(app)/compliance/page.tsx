@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { getServerUserId } from '@/lib/auth/get-auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { users, subcontractors, subProfiles } from '@/lib/db/schema'
@@ -13,7 +13,7 @@ import { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Compliance Overview' }
 
 export default async function CompliancePage() {
-  const { userId: clerkUserId } = await auth()
+  const clerkUserId = await getServerUserId()
   if (!clerkUserId) redirect('/auth/sign-in')
 
   const user = await db.query.users.findFirst({ where: eq(users.clerkUserId, clerkUserId) })

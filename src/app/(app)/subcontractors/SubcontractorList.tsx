@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { getServerUserId } from '@/lib/auth/get-auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { users, subcontractors, subProfiles, riskScores } from '@/lib/db/schema'
@@ -15,7 +15,7 @@ interface Props {
 }
 
 export default async function SubcontractorList({ searchParams }: Props) {
-  const { userId: clerkUserId } = await auth()
+  const clerkUserId = await getServerUserId()
   if (!clerkUserId) redirect('/auth/sign-in')
 
   const user = await db.query.users.findFirst({ where: eq(users.clerkUserId, clerkUserId) })

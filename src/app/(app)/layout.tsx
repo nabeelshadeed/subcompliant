@@ -1,16 +1,10 @@
-import { auth } from '@clerk/nextjs/server'
+import { getServerUserId } from '@/lib/auth/get-auth'
 import { redirect } from 'next/navigation'
 import Sidebar from '@/components/layout/Sidebar'
 import TopBar  from '@/components/layout/TopBar'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  let userId: string | null = null
-  try {
-    const authResult = await auth()
-    userId = authResult.userId
-  } catch {
-    redirect('/auth/sign-in')
-  }
+  const userId = await getServerUserId()
   if (!userId) redirect('/auth/sign-in')
 
   return (
