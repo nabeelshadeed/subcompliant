@@ -1,6 +1,6 @@
 import { db } from './db'
 import { complianceDocuments, documentTypes, subcontractors, subProfiles } from './db/schema'
-import { eq, and, inArray } from 'drizzle-orm'
+import { eq, and, inArray, isNull } from 'drizzle-orm'
 import { addDays, isBefore, isAfter } from 'date-fns'
 
 export type ComplianceStatus = 'compliant' | 'partially_compliant' | 'non_compliant'
@@ -61,6 +61,7 @@ export async function calculateCompliance(
     where: and(
       eq(complianceDocuments.profileId, profileId),
       eq(complianceDocuments.isCurrent, true),
+      isNull(complianceDocuments.deletedAt),
     ),
     with: { documentType: true },
   })
@@ -158,6 +159,7 @@ export async function getContractorComplianceOverview(contractorId: string): Pro
     where: and(
       eq(subcontractors.contractorId, contractorId),
       inArray(subcontractors.status, ['active', 'invited']),
+      isNull(subcontractors.deletedAt),
     ),
   })
 
@@ -180,6 +182,7 @@ export async function getContractorComplianceOverview(contractorId: string): Pro
       where: and(
         inArray(complianceDocuments.profileId, profileIds),
         eq(complianceDocuments.isCurrent, true),
+        isNull(complianceDocuments.deletedAt),
       ),
     }),
   ])

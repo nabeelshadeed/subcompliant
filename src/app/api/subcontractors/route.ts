@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { subcontractors, subProfiles, riskScores, uploadSessions, documentTypes } from '@/lib/db/schema'
-import { eq, and, inArray, desc, sql } from 'drizzle-orm'
+import { eq, and, inArray, desc, sql, isNull } from 'drizzle-orm'
 import { getAuthContext, requireAdmin } from '@/lib/auth/get-auth'
 import { sendMagicLinkInvite } from '@/lib/resend'
 import { rateLimit } from '@/lib/redis'
@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
     ))
     .where(and(
       eq(subcontractors.contractorId, ctx.contractorId),
+      isNull(subcontractors.deletedAt),
       status ? eq(subcontractors.status, status as any) : undefined,
       search
         ? sql`(${subProfiles.firstName} || ' ' || ${subProfiles.lastName} || ' ' || COALESCE(${subProfiles.companyName}, '')) ILIKE ${`%${search}%`}`
@@ -59,7 +60,10 @@ export async function GET(req: NextRequest) {
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(subcontractors)
-    .where(eq(subcontractors.contractorId, ctx.contractorId))
+    .where(and(
+      eq(subcontractors.contractorId, ctx.contractorId),
+      isNull(subcontractors.deletedAt),
+    ))
 
   return NextResponse.json({
     data: subs,
@@ -98,6 +102,7 @@ export async function POST(req: NextRequest) {
     .where(and(
       eq(subcontractors.contractorId, ctx.contractorId),
       inArray(subcontractors.status, ['active', 'invited']),
+      isNull(subcontractors.deletedAt),
     ))
 
   if (activeSubs >= ctx.contractor.subLimit) {
@@ -122,6 +127,13 @@ export async function POST(req: NextRequest) {
     const types = await db.query.documentTypes.findMany({
       where: inArray(documentTypes.slug, data.requiredDocTypeSlugs),
     })
+    const missingSlugs = data.requiredDocTypeSlugs.filter(s => !types.some(t => t.slug === s))
+    if (missingSlugs.length > 0) {
+      return NextResponse.json(
+        { error: { code: 'INVALID_DOC_TYPES', message: `Unknown document type slugs: ${missingSlugs.join(', ')}` } },
+        { status: 400 }
+      )
+    }
     docTypeIds   = types.map(t => t.id)
     docTypeNames = types.map(t => t.name)
   }

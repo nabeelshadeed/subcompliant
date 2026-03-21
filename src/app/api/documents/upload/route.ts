@@ -20,6 +20,27 @@ const ALLOWED_MIME_TYPES = [
 ]
 const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25 MB
 
+/**
+ * Detect the real file type from the first 12 bytes (magic bytes / file signature).
+ * The browser-supplied Content-Type is untrusted; this reads the actual content.
+ */
+function detectMimeFromBytes(buf: Buffer): string | null {
+  if (buf.length < 12) return null
+  // PDF: %PDF
+  if (buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46) return 'application/pdf'
+  // JPEG: FF D8 FF
+  if (buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) return 'image/jpeg'
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47 &&
+      buf[4] === 0x0D && buf[5] === 0x0A && buf[6] === 0x1A && buf[7] === 0x0A) return 'image/png'
+  // WebP: RIFF....WEBP
+  if (buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
+      buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50) return 'image/webp'
+  // HEIC/HEIF: ftyp box starts at byte 4
+  if (buf[4] === 0x66 && buf[5] === 0x74 && buf[6] === 0x79 && buf[7] === 0x70) return 'image/heic'
+  return null
+}
+
 export async function POST(req: NextRequest) {
   // Supports two auth modes:
   // 1. Clerk JWT (contractor staff reviewing/uploading on behalf)
@@ -158,6 +179,23 @@ export async function POST(req: NextRequest) {
   }
 
   const buffer  = Buffer.from(await file.arrayBuffer())
+
+  // Verify actual file content matches declared MIME type (magic bytes check).
+  // The browser-supplied file.type is untrusted and trivially spoofed.
+  const detectedMime = detectMimeFromBytes(buffer)
+  if (!detectedMime) {
+    return NextResponse.json(
+      { error: { code: 'INVALID_FILE_TYPE', message: 'File type could not be verified. Allowed types: PDF, JPEG, PNG, WebP, HEIC' } },
+      { status: 400 }
+    )
+  }
+  if (detectedMime !== file.type) {
+    return NextResponse.json(
+      { error: { code: 'FILE_TYPE_MISMATCH', message: 'Declared file type does not match actual file content' } },
+      { status: 400 }
+    )
+  }
+
   const fileHash = await hashBuffer(buffer)
 
   // Check for exact duplicate (same hash, same profile, same type)

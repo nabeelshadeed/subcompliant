@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { subcontractors, complianceDocuments, documentTypes } from '@/lib/db/schema'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, desc, isNull } from 'drizzle-orm'
 import { getAuthContext } from '@/lib/auth/get-auth'
-import { getPresignedDownloadUrl } from '@/lib/r2'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,17 +56,9 @@ export async function GET(
     .where(and(
       eq(complianceDocuments.profileId, sub.profileId),
       eq(complianceDocuments.isCurrent, true),
+      isNull(complianceDocuments.deletedAt),
     ))
     .orderBy(desc(complianceDocuments.submittedAt))
 
-  // Add presigned download URLs for approved docs
-  const withUrls = await Promise.all(docs.map(async doc => {
-    let downloadUrl: string | null = null
-    if (doc.fileKey && (doc.status === 'approved' || doc.status === 'pending')) {
-      downloadUrl = await getPresignedDownloadUrl(doc.fileKey).catch(() => null)
-    }
-    return { ...doc, downloadUrl }
-  }))
-
-  return NextResponse.json({ data: withUrls })
+  return NextResponse.json({ data: docs })
 }

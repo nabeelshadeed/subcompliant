@@ -81,6 +81,7 @@ export const subProfiles = pgTable('sub_profiles', {
   lastScoreAt:      timestamp('last_score_at', { withTimezone: true }),
   createdAt:        timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt:        timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt:        timestamp('deleted_at', { withTimezone: true }),
 })
 
 // ── Subcontractors ────────────────────────────────────────────────────────────
@@ -96,6 +97,7 @@ export const subcontractors = pgTable('subcontractors', {
   notes:        text('notes'),
   createdAt:    timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt:    timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt:    timestamp('deleted_at', { withTimezone: true }),
 })
 
 // ── Document Types ────────────────────────────────────────────────────────────
@@ -165,6 +167,7 @@ export const complianceDocuments = pgTable('compliance_documents', {
   isCurrent:             boolean('is_current').notNull().default(true),
   createdAt:             timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt:             timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt:             timestamp('deleted_at', { withTimezone: true }),
 })
 
 // ── Upload Sessions (magic links) ─────────────────────────────────────────────

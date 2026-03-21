@@ -51,6 +51,13 @@ export async function POST(req: NextRequest) {
     const types = await db.query.documentTypes.findMany({
       where: inArray(documentTypes.slug, data.requiredDocTypeSlugs),
     })
+    const missingSlugs = data.requiredDocTypeSlugs.filter(s => !types.some(t => t.slug === s))
+    if (missingSlugs.length > 0) {
+      return NextResponse.json(
+        { error: { code: 'INVALID_DOC_TYPES', message: `Unknown document type slugs: ${missingSlugs.join(', ')}` } },
+        { status: 400 }
+      )
+    }
     docTypeIds   = types.map(t => t.id)
     docTypeNames = types.map(t => t.name)
   }

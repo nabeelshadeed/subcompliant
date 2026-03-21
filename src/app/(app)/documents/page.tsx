@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { users, complianceDocuments, documentTypes, subProfiles, subcontractors } from '@/lib/db/schema'
-import { eq, and, desc, ilike, sql } from 'drizzle-orm'
+import { eq, and, desc, sql, isNull } from 'drizzle-orm'
 import { DocStatusBadge } from '@/components/ui/Badges'
 import { formatDate, formatBytes, buildQueryString } from '@/lib/utils'
 import { FileText } from 'lucide-react'
@@ -42,6 +42,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
 
   const listWhere = and(
     eq(complianceDocuments.isCurrent, true),
+    isNull(complianceDocuments.deletedAt),
     sql`${complianceDocuments.profileId} IN (${profileIdsSq})`,
     sp.status ? eq(complianceDocuments.status, sp.status as 'pending' | 'processing' | 'approved' | 'rejected' | 'expired' | 'superseded') : undefined,
     sp.category ? eq(documentTypes.category, sp.category) : undefined,

@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   const parsed = schema.safeParse(body)
   if (!parsed.success) {
     const msg = parsed.error.errors.map(e => e.message).join('; ')
-    return NextResponse.json({ error: msg }, { status: 400 })
+    return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: msg } }, { status: 400 })
   }
 
   const { name, email, subject, message } = parsed.data
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   if (!process.env.RESEND_API_KEY) {
     console.error('[contact] RESEND_API_KEY not set')
     return NextResponse.json(
-      { error: 'Contact form is temporarily unavailable. Please try again later or email us directly.' },
+      { error: { code: 'SERVICE_UNAVAILABLE', message: 'Contact form is temporarily unavailable. Please try again later or email us directly.' } },
       { status: 503 }
     )
   }
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('[contact] Send failed:', err)
     return NextResponse.json(
-      { error: 'Failed to send message. Please try again or email us directly.' },
+      { error: { code: 'SEND_FAILED', message: 'Failed to send message. Please try again or email us directly.' } },
       { status: 500 }
     )
   }
