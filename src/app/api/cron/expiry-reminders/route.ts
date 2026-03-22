@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { addDays, addHours } from 'date-fns'
 import { db } from '@/lib/db'
-import { complianceDocuments, subProfiles, subcontractors, notifications, uploadSessions } from '@/lib/db/schema'
-import { eq, and, between, lt, sql } from 'drizzle-orm'
-import { sendExpiryWarning } from '@/lib/resend'
+import { complianceDocuments, subProfiles, subcontractors, notifications, uploadSessions, contractors, users } from '@/lib/db/schema'
+import { eq, and, between, lt, lte, sql, isNull } from 'drizzle-orm'
+import { sendExpiryWarning, sendTrialExpiring } from '@/lib/resend'
 
 export const dynamic = 'force-dynamic'
 
-// Called by Vercel Cron (set in vercel.json) or an external scheduler
-// Authorization: Bearer {CRON_SECRET}
+// Called by Cloudflare Workers cron trigger (scheduled event → internal fetch)
+// OR an external scheduler with Authorization: Bearer {CRON_SECRET}
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Allow Cloudflare internal scheduled invocations (no auth header) or external callers with secret
+  const isCloudflareInternal = req.headers.get('x-cf-worker') === '1'
+  if (!isCloudflareInternal && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -182,11 +184,89 @@ export async function GET(req: NextRequest) {
     }).catch(() => {})
   }
 
+  // ── Trial expiry reminder emails ─────────────────────────────────────────
+  // Send to org admins whose trial ends in exactly 3 or 1 days
+  let trialEmailsSent = 0
+  const in1 = addDays(now, 1)
+  const in3 = addDays(now, 3)
+
+  const trialContractors = await db
+    .select({
+      id:          contractors.id,
+      name:        contractors.name,
+      trialEndsAt: contractors.trialEndsAt,
+      plan:        contractors.plan,
+    })
+    .from(contractors)
+    .where(and(
+      eq(contractors.plan, 'starter'),
+      isNull(contractors.stripeSubId),
+      // Trial ends within the next 3 days (catches both 1-day and 3-day windows)
+      between(
+        sql<string>`DATE(${contractors.trialEndsAt})`,
+        now.toISOString().slice(0, 10),
+        in3.toISOString().slice(0, 10),
+      ),
+    ))
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://subcompliant.co.uk'
+
+  for (const c of trialContractors) {
+    if (!c.trialEndsAt) continue
+    const daysLeft = Math.ceil((new Date(c.trialEndsAt).getTime() - now.getTime()) / 86400000)
+    if (![3, 1].includes(daysLeft)) continue
+
+    // Get the admin user(s) for this contractor
+    const admins = await db.query.users.findMany({
+      where: and(
+        eq(users.contractorId, c.id),
+        eq(users.role, 'admin'),
+        eq(users.isActive, true),
+      ),
+    })
+
+    for (const admin of admins) {
+      if (!admin.email) continue
+
+      // Dedup — only send once per milestone per contractor
+      const dedupKey = `trial_expiry_${c.id}_${daysLeft}d`
+      const alreadySent = await db.query.notifications.findFirst({
+        where: and(
+          eq(notifications.contractorId, c.id),
+          eq(notifications.eventType, `trial_expiring_${daysLeft}d`),
+          sql`${notifications.createdAt} > NOW() - INTERVAL '23 hours'`,
+        ),
+      })
+      if (alreadySent) continue
+
+      await sendTrialExpiring({
+        to:         admin.email,
+        firstName:  admin.firstName ?? 'there',
+        daysLeft,
+        upgradeUrl: `${appUrl}/settings/billing`,
+      }).catch(err => console.error('[cron] trial email failed:', err))
+
+      await db.insert(notifications).values({
+        contractorId: c.id,
+        eventType:    `trial_expiring_${daysLeft}d`,
+        severity:     daysLeft <= 1 ? 'critical' : 'warning',
+        channel:      'email',
+        status:       'sent',
+        recipientEmail: admin.email,
+        subject:      `Your SubCompliant trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
+        sentAt:       new Date(),
+      }).catch(() => {})
+
+      trialEmailsSent++
+    }
+  }
+
   return NextResponse.json({
     checked: expiringDocs.length,
     sent,
     skipped,
     expiredUpdated,
+    trialEmailsSent,
     timestamp: now.toISOString(),
   })
 }

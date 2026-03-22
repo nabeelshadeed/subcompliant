@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { users, contractors } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { cacheGet, cacheSet } from '@/lib/redis'
+import { sendWelcomeEmail } from '@/lib/resend'
 
 export const dynamic = 'force-dynamic'
 
@@ -109,15 +110,30 @@ export async function POST(req: NextRequest) {
         : null
 
       if (contractor) {
+        const email     = data.public_user_data?.identifier ?? ''
+        const firstName = data.public_user_data?.first_name ?? ''
+        const isAdmin   = data.role === 'org:admin'
+
         await db.insert(users).values({
           clerkUserId:  data.public_user_data?.user_id,
           contractorId: contractor.id,
-          email:        data.public_user_data?.identifier ?? '',
-          firstName:    data.public_user_data?.first_name,
+          email,
+          firstName,
           lastName:     data.public_user_data?.last_name,
           avatarUrl:    data.public_user_data?.image_url,
-          role:         data.role === 'org:admin' ? 'admin' : 'viewer',
+          role:         isAdmin ? 'admin' : 'viewer',
         }).onConflictDoNothing()
+
+        // Send welcome email to org admins only (the account owner)
+        if (isAdmin && email) {
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://subcompliant.co.uk'
+          await sendWelcomeEmail({
+            to:             email,
+            firstName:      firstName || 'there',
+            contractorName: contractor.name,
+            dashboardUrl:   `${appUrl}/dashboard`,
+          }).catch(err => console.error('[clerk-webhook] welcome email failed:', err))
+        }
       }
       break
     }
