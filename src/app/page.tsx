@@ -125,8 +125,35 @@ export default async function HomePage() {
             <div className="eyebrow"><span className="eyebrow-dot" />Why SubCompliant</div>
             <h2 id="why-h" className="sh">Constructionline and CHAS prove <em style={{ fontStyle: 'normal', color: 'var(--acc)' }}>your</em> compliance. SubCompliant manages <em style={{ fontStyle: 'normal', color: 'var(--acc)' }}>theirs.</em></h2>
             <p className="sl">Every incumbent platform was built for procurement. None of them solve the daily operational problem — managing your subcontractors&apos; documents, tracking their renewals, and staying audit-ready without a spreadsheet.</p>
-            <div style={{ marginTop: 40 }}>
-              <Link href="/auth/sign-up" className="btn btn-acc btn-lg">Start Free for 14 Days →</Link>
+            <div className="why-grid" style={{ marginTop: 40 }}>
+              <div className="why-item">
+                <span className="why-ico">📋</span>
+                <div>
+                  <strong>Spreadsheets miss renewals</strong>
+                  <p>No alerts, no automation, no audit trail. One missed renewal and you&apos;re liable.</p>
+                </div>
+              </div>
+              <div className="why-item">
+                <span className="why-ico">🏗️</span>
+                <div>
+                  <strong>CHAS/Constructionline is for buyers</strong>
+                  <p>They prove your compliance to clients. SubCompliant manages your subcontractors&apos; compliance for you.</p>
+                </div>
+              </div>
+              <div className="why-item">
+                <span className="why-ico">💼</span>
+                <div>
+                  <strong>Enterprise tools are overkill</strong>
+                  <p>Avetta and Alcumus are built for FTSE 500. SubCompliant is built for UK SMEs — set up in 10 minutes, not 10 weeks.</p>
+                </div>
+              </div>
+              <div className="why-item">
+                <span className="why-ico">⚖️</span>
+                <div>
+                  <strong>Personal liability is real</strong>
+                  <p>As the principal contractor, HSE holds you responsible for subcontractors on your sites. An audit trail isn&apos;t optional.</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -168,19 +195,37 @@ export default async function HomePage() {
                 <p>Pre-built document checklists for electricians, gas engineers, roofers, scaffolders, groundworkers and more — so you always request exactly what each trade needs.</p>
               </div>
             </div>
-            <div style={{ marginTop: 40, textAlign: 'center' as const }}>
-              <Link href="/auth/sign-up" className="btn btn-acc btn-lg">Start Free for 14 Days →</Link>
-            </div>
           </div>
         </section>
 
         <section className="section alt" id="how" aria-labelledby="how-h">
-          <div className="container center">
+          <div className="container">
             <div className="eyebrow" style={{ justifyContent: 'center' }}><span className="eyebrow-dot" />How It Works</div>
-            <h2 id="how-h" className="sh" style={{ margin: '0 auto 10px' }}>Live in 10 minutes. Compliant indefinitely.</h2>
-            <p className="sl" style={{ margin: '0 auto 0' }}>Create account → Invite via magic link → Verify & approve → Automated from there.</p>
-            <div style={{ marginTop: 32 }}>
-              <Link href="/auth/sign-up" className="btn btn-acc btn-lg">Start Free Trial</Link>
+            <h2 id="how-h" className="sh" style={{ margin: '0 auto 24px', textAlign: 'center' as const }}>Live in 10 minutes. Compliant indefinitely.</h2>
+            <div className="how-steps">
+              <div className="how-step">
+                <div className="how-num">1</div>
+                <h3>Create your account</h3>
+                <p>Sign up in under 60 seconds. No credit card, no IT setup. Your dashboard is ready immediately.</p>
+              </div>
+              <div className="how-arrow" aria-hidden="true">→</div>
+              <div className="how-step">
+                <div className="how-num">2</div>
+                <h3>Invite subcontractors</h3>
+                <p>Enter an email address and click send. SubCompliant fires a branded magic-link — no account needed on their end.</p>
+              </div>
+              <div className="how-arrow" aria-hidden="true">→</div>
+              <div className="how-step">
+                <div className="how-num">3</div>
+                <h3>They upload in 2 minutes</h3>
+                <p>Your subcontractor taps the link, uploads their documents from their phone or laptop. You get a notification instantly.</p>
+              </div>
+              <div className="how-arrow" aria-hidden="true">→</div>
+              <div className="how-step">
+                <div className="how-num">4</div>
+                <h3>Approve &amp; relax</h3>
+                <p>Review, approve or reject with one click. SubCompliant monitors every expiry date from here — automatically.</p>
+              </div>
             </div>
           </div>
         </section>
@@ -253,11 +298,77 @@ export default async function HomePage() {
         </section>
 
         <section className="section" id="pricing" aria-labelledby="price-h">
-          <div className="container center">
+          <div className="container">
             <div className="eyebrow" style={{ justifyContent: 'center' }}><span className="eyebrow-dot" />Pricing</div>
-            <h2 id="price-h" className="sh" style={{ margin: '0 auto 10px' }}>Simple pricing for every UK contractor.</h2>
-            <p className="sl" style={{ margin: '0 auto 32px' }}>14-day free trial on all plans. No credit card. Cancel anytime.</p>
-            <Link href="/auth/sign-up" className="btn btn-acc btn-lg">Start Free Trial</Link>
+            <h2 id="price-h" className="sh" style={{ margin: '0 auto 10px', textAlign: 'center' as const }}>Simple pricing. No surprises.</h2>
+            <p className="sl" style={{ margin: '0 auto 36px', textAlign: 'center' as const }}>14-day free trial on all plans. No credit card required. Cancel anytime.</p>
+            <div className="price-grid">
+              <article className="price-card">
+                <div className="price-tier">Starter</div>
+                <div className="price-val"><sup>£</sup>39<sub>/mo</sub></div>
+                <div className="price-desc">For sole traders managing up to 10 subcontractors.</div>
+                <ul className="price-feats">
+                  <li className="price-feat">10 subcontractors</li>
+                  <li className="price-feat">Magic-link document upload</li>
+                  <li className="price-feat">Expiry email alerts</li>
+                  <li className="price-feat">Trade-specific document templates</li>
+                  <li className="price-feat">Document vault &amp; history</li>
+                  <li className="price-feat">1 user seat</li>
+                  <li className="price-feat na">Compliance scores</li>
+                  <li className="price-feat na">HSE audit PDF reports</li>
+                </ul>
+                <Link href="/auth/sign-up?plan=starter" className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', padding: 13 }}>Start Free Trial</Link>
+              </article>
+              <article className="price-card pop">
+                <div className="price-pop">Most Popular</div>
+                <div className="price-tier">Pro</div>
+                <div className="price-val"><sup>£</sup>79<sub>/mo</sub></div>
+                <div className="price-desc">For growing contractors managing multiple sites and supply chains.</div>
+                <ul className="price-feats">
+                  <li className="price-feat">50 subcontractors</li>
+                  <li className="price-feat">Everything in Starter</li>
+                  <li className="price-feat">Real-time compliance scores</li>
+                  <li className="price-feat">HSE audit PDF reports</li>
+                  <li className="price-feat">Bulk invite &amp; chase</li>
+                  <li className="price-feat">Multi-site management</li>
+                  <li className="price-feat">SMS expiry alerts</li>
+                  <li className="price-feat">3 user seats</li>
+                </ul>
+                <Link href="/auth/sign-up?plan=pro" className="btn btn-acc" style={{ width: '100%', justifyContent: 'center', padding: 13 }}>Start Free Trial</Link>
+              </article>
+              <article className="price-card">
+                <div className="price-tier">Business</div>
+                <div className="price-val"><sup>£</sup>149<sub>/mo</sub></div>
+                <div className="price-desc">For established contractors with large, complex supply chains.</div>
+                <ul className="price-feats">
+                  <li className="price-feat">250 subcontractors</li>
+                  <li className="price-feat">Everything in Pro</li>
+                  <li className="price-feat">CSCS / Gas Safe / NICEIC verification</li>
+                  <li className="price-feat">API access &amp; webhooks</li>
+                  <li className="price-feat">Audit logs</li>
+                  <li className="price-feat">Priority support</li>
+                  <li className="price-feat">10 user seats</li>
+                </ul>
+                <Link href="/auth/sign-up?plan=business" className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', padding: 13 }}>Start Free Trial</Link>
+              </article>
+              <article className="price-card">
+                <div className="price-tier">Enterprise</div>
+                <div className="price-val" style={{ fontSize: 28, letterSpacing: '-.5px' }}>Custom<sub style={{ fontSize: 12 }}> pricing</sub></div>
+                <div className="price-desc">National contractors with complex compliance programmes and multiple divisions.</div>
+                <ul className="price-feats">
+                  <li className="price-feat">Unlimited subcontractors</li>
+                  <li className="price-feat">Everything in Business</li>
+                  <li className="price-feat">White-label contractor portal</li>
+                  <li className="price-feat">Dedicated account manager</li>
+                  <li className="price-feat">SLA &amp; DPA included</li>
+                  <li className="price-feat">Unlimited seats</li>
+                </ul>
+                <a href="mailto:sales@subcompliant.co.uk" className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', padding: 13 }}>Contact Sales</a>
+              </article>
+            </div>
+            <p style={{ textAlign: 'center' as const, marginTop: 24, fontSize: 13, color: 'var(--w30)' }}>
+              All prices exclude VAT · Save 20% with annual billing · 30-day money-back guarantee
+            </p>
           </div>
         </section>
 

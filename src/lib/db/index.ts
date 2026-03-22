@@ -7,13 +7,14 @@ const fullSchema = { ...schema, ...relations }
 type FullSchema = typeof fullSchema
 
 function getConnectionString(): string {
+  // Prefer the pooled URL in production (better for serverless), fall back to base URL
   const url = process.env.NODE_ENV === 'production'
-    ? process.env.DATABASE_URL_POOLED
+    ? (process.env.DATABASE_URL_POOLED || process.env.DATABASE_URL)
     : process.env.DATABASE_URL
   if (!url?.trim()) {
     throw new Error(
       process.env.NODE_ENV === 'production'
-        ? 'DATABASE_URL_POOLED is not set. Add it in Cloudflare Workers → Settings → Variables and Secrets, then run db:push against Neon.'
+        ? 'DATABASE_URL is not set. Add it in Cloudflare Workers → Settings → Variables and Secrets.'
         : 'DATABASE_URL is not set. Add it to .env.local.'
     )
   }

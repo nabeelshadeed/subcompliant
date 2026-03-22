@@ -199,6 +199,21 @@
 .net-stat-num em{font-style:normal;color:var(--acc)
 }.hp .net-stat-lbl{font-size:13px;color:var(--w55);margin-top:5px}
 
+/* ══ HOW IT WORKS STEPS ══ */
+.hp .how-steps{display:flex;align-items:flex-start;gap:0;margin-top:48px;justify-content:center}
+.hp .how-step{flex:1;max-width:220px;text-align:center;padding:0 16px}
+.hp .how-num{width:44px;height:44px;border-radius:50%;background:var(--acc);color:#0A0A0A;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.hp .how-step h3{font-size:14px;font-weight:700;color:var(--w);margin-bottom:8px}
+.hp .how-step p{font-size:13px;color:var(--w55);line-height:1.65}
+.hp .how-arrow{font-size:24px;color:var(--bdr2);margin-top:14px;flex-shrink:0;align-self:flex-start;padding-top:14px}
+
+/* ══ WHY GRID ══ */
+.hp .why-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.hp .why-item{display:flex;align-items:flex-start;gap:14px;padding:20px;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r16)}
+.hp .why-ico{font-size:24px;flex-shrink:0;line-height:1;margin-top:2px}
+.hp .why-item strong{display:block;font-size:14px;font-weight:600;color:var(--w);margin-bottom:5px}
+.hp .why-item p{font-size:13px;color:var(--w55);line-height:1.6;margin:0}
+
 /* ══ PRICING ══ */
 .pricing-toggle{display:inline-flex;align-items:center;gap:0;padding:4px;background:var(--bg3);border:1px solid var(--bdr);border-radius:100px;margin-bottom:48px
 }.hp .ptog{padding:8px 20px;border-radius:100px;font-size:14px;font-weight:500;color:var(--w55);background:none;border:none;cursor:pointer;transition:all .15s}
