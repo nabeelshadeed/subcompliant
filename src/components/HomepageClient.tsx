@@ -40,6 +40,20 @@ export function HomepageClient() {
       })
     })
 
+    // Scroll-reveal: add .in to .rv elements as they enter the viewport
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12 }
+    )
+    document.querySelectorAll('.hp .rv').forEach((el) => observer.observe(el))
+
     document.querySelectorAll('.hp .faq-q').forEach((btn) => {
       btn.addEventListener('click', () => {
         const item = (btn as HTMLElement).closest('.faq-item')
@@ -60,7 +74,10 @@ export function HomepageClient() {
       })
     })
 
-    return () => window.removeEventListener('scroll', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      observer.disconnect()
+    }
   }, [])
   return null
 }
