@@ -1,35 +1,53 @@
 import Link from 'next/link'
-import { Database, ArrowRight } from 'lucide-react'
+import { ShieldCheck, Mail, RefreshCw } from 'lucide-react'
 
 export default function SetupPage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-4">
-      <div className="max-w-lg w-full rounded-2xl border border-white/10 p-8 bg-[#111]" role="main">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30">
-            <Database className="text-amber-400" size={24} aria-hidden />
+      <div className="max-w-md w-full rounded-2xl border border-white/10 p-8 bg-[#111] space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center border border-accent/30">
+            <ShieldCheck className="text-accent" size={24} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white font-display">Setup required</h1>
-            <p className="text-sm text-white/60">Your database is not set up yet or you need to complete sign-in.</p>
+            <h1 className="text-xl font-bold text-white font-display">Account setup</h1>
+            <p className="text-sm text-white/60">Your account is being provisioned</p>
           </div>
         </div>
-        <p className="text-white/70 text-sm mb-4">
-          If you&apos;re the developer: run the database migration once with your Neon connection string:
+
+        <p className="text-white/70 text-sm leading-relaxed">
+          This usually completes in a few seconds after sign-up. Try refreshing the page or signing out and back in.
+          If the problem persists, contact support and we&apos;ll sort it straight away.
         </p>
-        <pre className="bg-black/40 text-white/90 text-xs p-4 rounded-lg overflow-x-auto mb-6 border border-white/10 font-mono">
-          DATABASE_URL=&quot;your-neon-connection-string&quot; npm run db:push
-        </pre>
-        <p className="text-white/60 text-sm mb-6">
-          Get the connection string from Neon Console → your project → Connection string (pooled). Then refresh this page.
-        </p>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-accent hover:text-accent-hover font-medium text-sm transition-colors"
-        >
-          Back to home
-          <ArrowRight size={14} aria-hidden />
-        </Link>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-accent text-[#0A0A0A] font-semibold text-sm rounded-lg hover:bg-accent-hover transition-colors"
+          >
+            <RefreshCw size={13} />
+            Try again
+          </Link>
+          <Link
+            href="/contact"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 text-white/70 font-medium text-sm rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <Mail size={13} />
+            Contact support
+          </Link>
+        </div>
+
+        {/* Dev note — hidden in production via opacity */}
+        <details className="text-xs text-white/30 cursor-pointer">
+          <summary className="hover:text-white/50 transition-colors">Developer info</summary>
+          <div className="mt-3 space-y-2">
+            <p>If the database is not set up, run:</p>
+            <pre className="bg-black/40 text-white/70 p-3 rounded-lg overflow-x-auto font-mono border border-white/10">
+              npm run db:push
+            </pre>
+            <p>Get your connection string from Neon Console → your project → Connection string.</p>
+          </div>
+        </details>
       </div>
     </div>
   )

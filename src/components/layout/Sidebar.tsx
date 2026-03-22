@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, ShieldCheck, FileText,
-  Bell, Settings, CreditCard, X,
+  Bell, Settings, CreditCard, X, Clock, FileBarChart,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +14,11 @@ const NAV = [
   { href: '/compliance',     label: 'Compliance',     icon: ShieldCheck,     badge: false },
   { href: '/documents',      label: 'Documents',      icon: FileText,        badge: false },
   { href: '/notifications',  label: 'Notifications',  icon: Bell,            badge: true  },
+]
+
+const COMPLIANCE_SUB = [
+  { href: '/compliance/expiry', label: 'Expiry Timeline', icon: Clock },
+  { href: '/compliance/report', label: 'Audit Report',    icon: FileBarChart },
 ]
 
 const BOTTOM = [
@@ -60,24 +65,46 @@ export default function Sidebar({
       {/* Primary nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
         {NAV.map(({ href, label, icon: Icon, badge }) => (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-              isActive(href)
-                ? 'bg-accent/15 text-accent border border-accent/25'
-                : 'text-white/70 hover:bg-white/5 hover:text-white'
+          <div key={href}>
+            <Link
+              href={href}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                isActive(href)
+                  ? 'bg-accent/15 text-accent border border-accent/25'
+                  : 'text-white/70 hover:bg-white/5 hover:text-white'
+              )}
+            >
+              <Icon size={16} className={isActive(href) ? 'text-accent' : 'text-white/50'} />
+              <span className="flex-1">{label}</span>
+              {badge && recentNotifCount > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-[#0A0A0A] text-[10px] font-bold leading-none">
+                  {recentNotifCount > 99 ? '99+' : recentNotifCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Compliance sub-nav */}
+            {href === '/compliance' && pathname.startsWith('/compliance') && (
+              <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
+                {COMPLIANCE_SUB.map(({ href: subHref, label: subLabel, icon: SubIcon }) => (
+                  <Link
+                    key={subHref}
+                    href={subHref}
+                    className={cn(
+                      'flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium transition-colors',
+                      pathname === subHref
+                        ? 'text-accent'
+                        : 'text-white/50 hover:text-white/80'
+                    )}
+                  >
+                    <SubIcon size={13} />
+                    {subLabel}
+                  </Link>
+                ))}
+              </div>
             )}
-          >
-            <Icon size={16} className={isActive(href) ? 'text-accent' : 'text-white/50'} />
-            <span className="flex-1">{label}</span>
-            {badge && recentNotifCount > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-[#0A0A0A] text-[10px] font-bold leading-none">
-                {recentNotifCount > 99 ? '99+' : recentNotifCount}
-              </span>
-            )}
-          </Link>
+          </div>
         ))}
       </nav>
 

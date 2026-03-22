@@ -41,7 +41,7 @@ export default function ContactForm() {
       const data = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        setError(data.error ?? 'Something went wrong. Please try again or email us directly.')
+        setError(data.error?.message ?? 'Something went wrong. Please try again or email us directly.')
         return
       }
 

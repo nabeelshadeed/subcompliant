@@ -49,7 +49,7 @@ export default function AppShell({
       </div>
 
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-        <TopBar onMenuClick={() => setSidebarOpen(o => !o)} />
+        <TopBar onMenuClick={() => setSidebarOpen(o => !o)} recentNotifCount={recentNotifCount} />
         <TrialBanner trialEndsAt={trialEndsAt ?? null} plan={plan ?? 'starter'} />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#0A0A0A]">
           {children}

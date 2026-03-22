@@ -1,7 +1,7 @@
 import { requireUser } from '@/lib/auth/require-auth'
 import { db } from '@/lib/db'
 import { contractors, subcontractors, subProfiles, riskScores } from '@/lib/db/schema'
-import { eq, and, inArray, desc, sql } from 'drizzle-orm'
+import { eq, and, inArray, desc, sql, isNull } from 'drizzle-orm'
 import Link from 'next/link'
 import { ComplianceBadge, RiskBadge, SubStatusBadge } from '@/components/ui/Badges'
 import { formatDate, formatRelative, initials } from '@/lib/utils'
@@ -28,6 +28,7 @@ export default async function SubcontractorList({ searchParams }: Props) {
 
   const baseWhere = and(
     eq(subcontractors.contractorId, contractorId),
+    isNull(subcontractors.deletedAt),
     searchParams.status ? eq(subcontractors.status, searchParams.status as any) : undefined,
     searchParams.q
       ? sql`(${subProfiles.firstName} || ' ' || ${subProfiles.lastName} || ' ' || COALESCE(${subProfiles.companyName}, '')) ILIKE ${`%${searchParams.q}%`}`
