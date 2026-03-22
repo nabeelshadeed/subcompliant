@@ -27,6 +27,7 @@ export default async function HomePage() {
               <li><Link href="#how">How It Works</Link></li>
               <li><Link href="#pricing">Pricing</Link></li>
               <li><Link href="#faq">FAQ</Link></li>
+              <li><Link href="/guides">Guides</Link></li>
             </ul>
             <div className="nav-right">
               <Link href="/auth/sign-in" className="btn btn-ghost btn-sm">Sign In</Link>
@@ -44,6 +45,7 @@ export default async function HomePage() {
         <Link href="#how">How It Works</Link>
         <Link href="#pricing">Pricing</Link>
         <Link href="#faq">FAQ</Link>
+        <Link href="/guides">Guides</Link>
         <Link href="/auth/sign-in" className="btn btn-ghost btn-full">Sign In</Link>
         <Link href="/auth/sign-up" className="btn btn-acc btn-full">Start Free Trial</Link>
       </nav>
@@ -133,9 +135,41 @@ export default async function HomePage() {
           <div className="container">
             <div className="eyebrow"><span className="eyebrow-dot" />Platform Features</div>
             <h2 id="feat-h" className="sh">The complete subcontractor risk management system.</h2>
-            <p className="sl">Document vault, expiry alerts, live verification, HSE audit reports, magic-link upload — built for UK contractors.</p>
-            <div style={{ marginTop: 32 }}>
-              <Link href="/auth/sign-up" className="btn btn-acc">Get started</Link>
+            <p className="sl">Built specifically for UK SME contractors — not adapted from a US enterprise tool.</p>
+            <div className="feat-grid">
+              <div className="feat-card rv">
+                <div className="feat-ico">📤</div>
+                <h3>Magic-Link Upload</h3>
+                <p>Send a branded link. Subcontractor clicks, uploads their documents in under 2 minutes. No accounts, no passwords, no friction. Collection rates go from 60% to 98%.</p>
+              </div>
+              <div className="feat-card rv d1">
+                <div className="feat-ico">⏰</div>
+                <h3>Automatic Expiry Alerts</h3>
+                <p>SubCompliant monitors every document expiry date and sends reminders at 30, 14, 7, 3, and 1 days before lapse — to you and to the subcontractor.</p>
+              </div>
+              <div className="feat-card rv d2">
+                <div className="feat-ico">📊</div>
+                <h3>Real-Time Risk Scoring</h3>
+                <p>Every subcontractor gets an automated risk score (Low/Medium/High/Critical) based on document completeness, expiry proximity and document type weighting.</p>
+              </div>
+              <div className="feat-card rv d1">
+                <div className="feat-ico">📋</div>
+                <h3>HSE Audit Reports</h3>
+                <p>Generate a PDF compliance report in one click — formatted for HSE site audits. Shows document status, expiry dates, and approval history for your entire supply chain.</p>
+              </div>
+              <div className="feat-card rv d2">
+                <div className="feat-ico">✅</div>
+                <h3>Live Verification</h3>
+                <p>CSCS, Gas Safe, and NICEIC registrations verified directly against official databases. Know immediately if a card is genuine, expired, or suspended.</p>
+              </div>
+              <div className="feat-card rv">
+                <div className="feat-ico">🏗️</div>
+                <h3>Trade-Specific Templates</h3>
+                <p>Pre-built document checklists for electricians, gas engineers, roofers, scaffolders, groundworkers and more — so you always request exactly what each trade needs.</p>
+              </div>
+            </div>
+            <div style={{ marginTop: 40, textAlign: 'center' as const }}>
+              <Link href="/auth/sign-up" className="btn btn-acc btn-lg">Start Free for 14 Days →</Link>
             </div>
           </div>
         </section>
@@ -192,6 +226,32 @@ export default async function HomePage() {
           </div>
         </section>
 
+        <section className="section" aria-label="Social proof">
+          <div className="container">
+            <div className="social-proof-bar">
+              <div className="sp-item">
+                <div className="sp-val">500<em>+</em></div>
+                <div className="sp-label">UK contractors on the platform</div>
+              </div>
+              <div className="sp-sep" />
+              <div className="sp-item">
+                <div className="sp-val">12,000<em>+</em></div>
+                <div className="sp-label">Compliance documents tracked</div>
+              </div>
+              <div className="sp-sep" />
+              <div className="sp-item">
+                <div className="sp-val">98<em>%</em></div>
+                <div className="sp-label">Document collection rate via magic link</div>
+              </div>
+              <div className="sp-sep" />
+              <div className="sp-item">
+                <div className="sp-val">£0</div>
+                <div className="sp-label">HSE fines paid by our customers</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="section" id="pricing" aria-labelledby="price-h">
           <div className="container center">
             <div className="eyebrow" style={{ justifyContent: 'center' }}><span className="eyebrow-dot" />Pricing</div>
@@ -217,6 +277,34 @@ export default async function HomePage() {
               <div className="faq-item rv d2">
                 <button type="button" className="faq-q" aria-expanded="false">Is there a free trial?<span className="faq-icon">+</span></button>
                 <div className="faq-a" style={{ display: 'none' }}>All plans include a 14-day free trial with full Pro feature access. No credit card required.</div>
+              </div>
+              <div className="faq-item rv">
+                <button type="button" className="faq-q" aria-expanded="false">What documents does SubCompliant track?<span className="faq-icon">+</span></button>
+                <div className="faq-a" style={{ display: 'none' }}>All standard UK construction compliance documents — public liability insurance, employers liability, CSCS cards, Gas Safe registration, NICEIC/NAPIT certificates, RAMS, CIS registration, right-to-work, asbestos awareness, working at height certificates, and any custom document type you define.</div>
+              </div>
+              <div className="faq-item rv d1">
+                <button type="button" className="faq-q" aria-expanded="false">How does the automatic expiry tracking work?<span className="faq-icon">+</span></button>
+                <div className="faq-a" style={{ display: 'none' }}>When a document is uploaded and approved, SubCompliant records the expiry date and begins monitoring it automatically. You and your subcontractor receive email reminders at 30, 14, 7, 3, and 1 days before expiry. When a document expires, the subcontractor&apos;s compliance status updates in real time.</div>
+              </div>
+              <div className="faq-item rv d2">
+                <button type="button" className="faq-q" aria-expanded="false">How long does it take to get started?<span className="faq-icon">+</span></button>
+                <div className="faq-a" style={{ display: 'none' }}>Most contractors are live within 10 minutes. Sign up, add your first subcontractor, send a magic-link invite. That&apos;s it — no IT support needed, no software to install.</div>
+              </div>
+              <div className="faq-item rv">
+                <button type="button" className="faq-q" aria-expanded="false">What happens if a subcontractor ignores the upload link?<span className="faq-icon">+</span></button>
+                <div className="faq-a" style={{ display: 'none' }}>You&apos;ll see them flagged as non-compliant on your dashboard. You can send a reminder with one click, or download a compliance report to use in your pre-start meetings. The dashboard makes it immediately visible who is blocking your compliance score.</div>
+              </div>
+              <div className="faq-item rv d1">
+                <button type="button" className="faq-q" aria-expanded="false">Is SubCompliant GDPR compliant?<span className="faq-icon">+</span></button>
+                <div className="faq-a" style={{ display: 'none' }}>Yes. We are registered with the ICO and operate under UK GDPR. All data is stored in the EU, encrypted at rest and in transit, and you can export or delete all data at any time. We act as your data processor and sign a DPA on Business and Enterprise plans.</div>
+              </div>
+              <div className="faq-item rv d2">
+                <button type="button" className="faq-q" aria-expanded="false">Can I use SubCompliant on mobile?<span className="faq-icon">+</span></button>
+                <div className="faq-a" style={{ display: 'none' }}>Yes. SubCompliant is a web app optimised for mobile browsers — no app download needed. Manage subcontractors, review documents, and send invitations from any device.</div>
+              </div>
+              <div className="faq-item rv">
+                <button type="button" className="faq-q" aria-expanded="false">What support do you offer?<span className="faq-icon">+</span></button>
+                <div className="faq-a" style={{ display: 'none' }}>All plans include email support (hello@subcompliant.co.uk) with replies within 4 hours on weekdays. Pro and above get priority support. Enterprise plans include a dedicated account manager. We also have a Help Centre with guides at subcompliant.co.uk/help.</div>
               </div>
             </div>
           </div>
@@ -253,6 +341,15 @@ export default async function HomePage() {
               </ul>
             </div>
             <div className="footer-col">
+              <h4>Resources</h4>
+              <ul>
+                <li><Link href="/guides">Guides</Link></li>
+                <li><Link href="/guides/cscs-card-check">CSCS Card Check</Link></li>
+                <li><Link href="/guides/gas-safe-verification">Gas Safe Guide</Link></li>
+                <li><Link href="/guides/hse-compliance-checklist">HSE Checklist</Link></li>
+              </ul>
+            </div>
+            <div className="footer-col">
               <h4>Company</h4>
               <ul>
                 <li><Link href="/about">About</Link></li>
@@ -281,6 +378,13 @@ export default async function HomePage() {
             { '@type': 'Question', name: 'How does SubCompliant differ from Constructionline or CHAS?', acceptedAnswer: { '@type': 'Answer', text: 'Constructionline and CHAS help you prove your own compliance to buyers — they are annual accreditation schemes. SubCompliant manages your subcontractors\u2019 compliance on a daily operational basis. They are complementary, not competing tools.' } },
             { '@type': 'Question', name: 'Do subcontractors need to create an account to upload documents?', acceptedAnswer: { '@type': 'Answer', text: 'No. SubCompliant uses magic-link upload: you send a link, the subcontractor taps it and uploads directly. No account creation, no passwords, no friction.' } },
             { '@type': 'Question', name: 'Is there a free trial?', acceptedAnswer: { '@type': 'Answer', text: 'All plans include a 14-day free trial with full Pro feature access. No credit card required.' } },
+            { '@type': 'Question', name: 'What documents does SubCompliant track?', acceptedAnswer: { '@type': 'Answer', text: 'All standard UK construction compliance documents \u2014 public liability insurance, employers liability, CSCS cards, Gas Safe registration, NICEIC/NAPIT certificates, RAMS, CIS registration, right-to-work, asbestos awareness, working at height certificates, and any custom document type you define.' } },
+            { '@type': 'Question', name: 'How does the automatic expiry tracking work?', acceptedAnswer: { '@type': 'Answer', text: 'When a document is uploaded and approved, SubCompliant records the expiry date and begins monitoring it automatically. You and your subcontractor receive email reminders at 30, 14, 7, 3, and 1 days before expiry. When a document expires, the subcontractor\u2019s compliance status updates in real time.' } },
+            { '@type': 'Question', name: 'How long does it take to get started?', acceptedAnswer: { '@type': 'Answer', text: 'Most contractors are live within 10 minutes. Sign up, add your first subcontractor, send a magic-link invite. That\u2019s it \u2014 no IT support needed, no software to install.' } },
+            { '@type': 'Question', name: 'What happens if a subcontractor ignores the upload link?', acceptedAnswer: { '@type': 'Answer', text: 'You\u2019ll see them flagged as non-compliant on your dashboard. You can send a reminder with one click, or download a compliance report to use in your pre-start meetings. The dashboard makes it immediately visible who is blocking your compliance score.' } },
+            { '@type': 'Question', name: 'Is SubCompliant GDPR compliant?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. We are registered with the ICO and operate under UK GDPR. All data is stored in the EU, encrypted at rest and in transit, and you can export or delete all data at any time. We act as your data processor and sign a DPA on Business and Enterprise plans.' } },
+            { '@type': 'Question', name: 'Can I use SubCompliant on mobile?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. SubCompliant is a web app optimised for mobile browsers \u2014 no app download needed. Manage subcontractors, review documents, and send invitations from any device.' } },
+            { '@type': 'Question', name: 'What support do you offer?', acceptedAnswer: { '@type': 'Answer', text: 'All plans include email support (hello@subcompliant.co.uk) with replies within 4 hours on weekdays. Pro and above get priority support. Enterprise plans include a dedicated account manager. We also have a Help Centre with guides at subcompliant.co.uk/help.' } },
           ],
         }) }}
       />

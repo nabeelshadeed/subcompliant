@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'HSE Compliance Guide for UK Contractors 2026 — SubCompliant',
+  title: 'HSE Compliance Guide for UK Contractors 2026',
   description: 'Complete guide to HSE compliance for UK construction contractors. Understand your legal duties, what documents you need from subcontractors, and how to prepare for an HSE inspection.',
 }
 

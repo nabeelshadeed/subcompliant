@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Subcontractor Insurance Requirements UK 2026 — SubCompliant',
+  title: 'Subcontractor Insurance Requirements UK 2026',
   description: 'What insurance must UK subcontractors hold? Guide to public liability, employers liability, and professional indemnity requirements for construction subcontractors.',
 }
 

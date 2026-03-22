@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'CSCS Card Requirements UK 2026 — Complete Guide — SubCompliant',
+  title: 'CSCS Card Requirements UK 2026 — Complete Guide',
   description: 'Which CSCS card does your subcontractor need? Full guide to CSCS card types, eligibility, expiry dates, and how to verify a CSCS card is genuine.',
 }
 

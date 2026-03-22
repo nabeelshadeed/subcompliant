@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — SubCompliant',
+  title: 'Terms of Service',
   description: 'SubCompliant Terms of Service. Read the terms that govern your use of the SubCompliant subcontractor compliance platform.',
 }
 

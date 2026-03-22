@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Electrical Contractor Compliance Software UK — SubCompliant',
+  title: 'Electrical Contractor Compliance Software UK',
   description: 'SubCompliant trade compliance template for Electricians and electrical contractors. Pre-built document requirements: NICEIC registration, ECS card, CSCS card, Public Liability Insurance. Start free trial — 14 days.',
 }
 

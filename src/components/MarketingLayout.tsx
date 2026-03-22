@@ -18,11 +18,17 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
           <Link href="/pricing">Pricing</Link>
           <Link href="/about">About</Link>
           <Link href="/contact">Contact</Link>
+          <span style={{ color: 'rgba(255,255,255,.15)' }}>·</span>
+          <Link href="/faq">FAQ</Link>
+          <Link href="/help">Help Centre</Link>
+          <Link href="/security">Security</Link>
+          <span style={{ color: 'rgba(255,255,255,.15)' }}>·</span>
           <Link href="/legal/privacy">Privacy</Link>
           <Link href="/legal/terms">Terms</Link>
           <Link href="/legal/cookies">Cookies</Link>
         </div>
         <div className="footer-copy">© 2026 SubCompliant Ltd.</div>
+        <div className="footer-copy" style={{ marginTop: 4, opacity: 0.5, fontSize: 12 }}>Registered in England &amp; Wales · ICO Registered · UK GDPR Compliant</div>
       </footer>
     </>
   )

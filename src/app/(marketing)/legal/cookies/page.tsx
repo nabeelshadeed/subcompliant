@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy — SubCompliant',
+  title: 'Cookie Policy',
   description: 'SubCompliant Cookie Policy. How we use cookies on subcompliant.co.uk.',
 }
 

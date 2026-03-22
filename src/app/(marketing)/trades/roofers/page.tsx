@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Roofer Compliance Software UK — SubCompliant',
+  title: 'Roofer Compliance Software UK',
   description: 'SubCompliant trade compliance template for Roofing subcontractors. Pre-built document requirements: CSCS card, NFRC membership, Working at Height training, Public Liability Insurance. Start free trial — 14 days.',
 }
 

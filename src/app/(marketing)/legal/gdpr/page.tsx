@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'GDPR Compliance — SubCompliant',
+  title: 'GDPR Compliance',
   description: 'SubCompliant GDPR compliance statement. How we protect personal data under UK GDPR.',
 }
 

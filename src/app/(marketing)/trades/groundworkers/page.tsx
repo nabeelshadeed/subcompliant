@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Groundworker Compliance Software UK — SubCompliant',
+  title: 'Groundworker Compliance Software UK',
   description: 'SubCompliant trade compliance template for Groundworks and civil engineering subcontractors. Pre-built document requirements: CSCS card, CPCS card, Public Liability Insurance, Plant operator certificate. Start free trial — 14 days.',
 }
 

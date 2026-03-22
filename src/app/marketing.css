@@ -73,7 +73,7 @@
 .mp .mission-box h2 { color: var(--acc); }
 .mp .values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 28px 0; }
 .mp .value-card { padding: 22px; background: var(--bg2); border: 1px solid var(--bdr); border-radius: 12px; }
-.mp .value-ico { font-size: 24px; margin-bottom: 10px; }
+.mp .value-ico { font-size: 24px; margin-bottom: 10px; color: var(--acc); display: flex; }
 .mp .value-card h3 { font-family: 'Syne', system-ui, sans-serif; font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; }
 .mp .value-card p { font-size: 13px; color: var(--w55); line-height: 1.6; margin: 0; }
 
@@ -84,6 +84,7 @@
 .mp .ch-title { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 3px; }
 .mp .ch-desc { font-size: 13px; color: var(--w55); }
 .mp .ch-link { font-size: 13px; color: var(--acc); margin-top: 3px; display: block; }
+.mp .ch-response { font-size: 12px; color: var(--w35); margin-top: 6px; }
 .mp .form-card { background: var(--bg2); border: 1px solid var(--bdr); border-radius: 16px; padding: 28px; }
 .mp .form-card h2 { font-family: 'Syne', system-ui, sans-serif; font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 6px; }
 .mp .form-card p { font-size: 13px; color: var(--w55); margin-bottom: 20px; }
@@ -183,6 +184,8 @@
 
 .mp .container { max-width: var(--wrap-wide); margin: 0 auto; padding: 0 24px; }
 .mp .hero { padding: 80px 0 60px; text-align: center; }
+.mp .pricing-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 32px; }
+.mp .ptrust-badge { font-size: 13px; color: var(--w55); background: var(--bg2); border: 1px solid var(--bdr); border-radius: 100px; padding: 6px 14px; }
 .mp .pricing-toggle { display: inline-flex; padding: 4px; background: var(--bg3); border: 1px solid var(--bdr); border-radius: 100px; margin-bottom: 52px; }
 .mp .ptog { padding: 8px 20px; border-radius: 100px; font-size: 14px; font-weight: 500; color: var(--w55); background: none; border: none; cursor: pointer; transition: all .15s; }
 .mp .ptog.active { background: var(--bg4); color: #fff; }
@@ -226,3 +229,96 @@
 @media (max-width: 700px) { .mp .values-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 600px) { .mp .price-grid { grid-template-columns: 1fr; max-width: 380px; margin-left: auto; margin-right: auto; } .mp .docs-grid { grid-template-columns: 1fr; } }
 @media (max-width: 480px) { .mp .values-grid { grid-template-columns: 1fr; } }
+
+/* ── Social proof bar ────────────────────────────────────────────────────── */
+.mp .social-proof-bar { display: flex; align-items: center; justify-content: center; gap: 0; background: var(--bg2); border: 1px solid var(--bdr); border-radius: 16px; padding: 32px; flex-wrap: wrap; }
+.mp .sp-item { text-align: center; padding: 0 36px; }
+.mp .sp-val { font-family: 'Syne', system-ui, sans-serif; font-size: 42px; font-weight: 800; color: #fff; line-height: 1; }
+.mp .sp-val em { color: var(--acc); font-style: normal; }
+.mp .sp-label { font-size: 13px; color: var(--w55); margin-top: 6px; max-width: 140px; margin-left: auto; margin-right: auto; }
+.mp .sp-sep { width: 1px; height: 60px; background: var(--bdr); flex-shrink: 0; }
+
+/* ── Feature grid ────────────────────────────────────────────────────────── */
+.mp .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 40px; }
+.mp .feat-card { padding: 24px; background: var(--bg2); border: 1px solid var(--bdr); border-radius: 14px; transition: border-color .2s; }
+.mp .feat-card:hover { border-color: var(--bdr2); }
+.mp .feat-ico { font-size: 26px; margin-bottom: 12px; }
+.mp .feat-card h3 { font-family: 'Syne', system-ui, sans-serif; font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.mp .feat-card p { font-size: 13px; color: var(--w55); line-height: 1.7; margin: 0; }
+
+/* ── FAQ page ────────────────────────────────────────────────────────────── */
+.mp .faq-page-cat { margin-bottom: 48px; }
+.mp .faq-page-cat-title { font-family: 'Syne', system-ui, sans-serif; font-size: 18px; font-weight: 700; color: var(--acc); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--bdr); }
+.mp .faq-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 48px; }
+.mp .faq-nav-item { padding: 8px 16px; background: var(--bg2); border: 1px solid var(--bdr); border-radius: 100px; font-size: 13px; color: var(--w55); cursor: pointer; transition: all .15s; text-decoration: none; display: inline-block; }
+.mp .faq-nav-item:hover { border-color: var(--acc); color: var(--acc); }
+
+/* ── Security page ───────────────────────────────────────────────────────── */
+.mp .security-badges { display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0; }
+.mp .sec-badge { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(204,255,0,.08); border: 1px solid rgba(204,255,0,.2); border-radius: 100px; font-size: 13px; font-weight: 500; color: var(--acc); }
+.mp .sec-badge-pending { background: rgba(255,255,255,.05); border-color: var(--bdr); color: var(--w55); }
+.mp .security-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 32px 0; }
+.mp .sec-card { padding: 24px; background: var(--bg2); border: 1px solid var(--bdr); border-radius: 14px; }
+.mp .sec-card h3 { font-family: 'Syne', system-ui, sans-serif; font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.mp .sec-card p { font-size: 13px; color: var(--w55); line-height: 1.7; margin: 0 0 10px; }
+.mp .check-list { list-style: none; padding: 0; margin: 0; }
+.mp .check-list li { font-size: 13px; color: var(--w55); padding: 4px 0; padding-left: 20px; position: relative; }
+.mp .check-list li::before { content: '✓'; position: absolute; left: 0; color: var(--acc); font-weight: 700; }
+
+/* ── Help center ─────────────────────────────────────────────────────────── */
+.mp .help-search { width: 100%; padding: 14px 20px; background: var(--bg2); border: 1px solid var(--bdr2); border-radius: 12px; color: #fff; font-size: 15px; outline: none; margin-bottom: 48px; }
+.mp .help-search:focus { border-color: var(--acc); }
+.mp .help-cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 48px; }
+.mp .help-cat-card { padding: 24px; background: var(--bg2); border: 1px solid var(--bdr); border-radius: 14px; transition: border-color .2s; display: block; }
+.mp .help-cat-card:hover { border-color: var(--bdr2); }
+.mp .help-cat-ico { font-size: 28px; margin-bottom: 10px; }
+.mp .help-cat-card h3 { font-family: 'Syne', system-ui, sans-serif; font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.mp .help-cat-card p { font-size: 13px; color: var(--w55); margin: 0; }
+.mp .help-articles { list-style: none; padding: 0; margin: 0; }
+.mp .help-article-item { border-bottom: 1px solid var(--bdr); }
+.mp .help-article-item a { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; font-size: 14px; color: var(--w80); transition: color .15s; }
+.mp .help-article-item a:hover { color: var(--acc); }
+.mp .help-contact-box { margin-top: 48px; padding: 28px; background: var(--bg2); border: 1px solid var(--bdr); border-radius: 14px; text-align: center; }
+
+/* ── Help article ────────────────────────────────────────────────────────── */
+.mp .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--w55); margin-bottom: 32px; }
+.mp .breadcrumb a { color: var(--w55); }
+.mp .breadcrumb a:hover { color: var(--acc); }
+.mp .breadcrumb-sep { color: var(--w30); }
+.mp .help-article-toc { background: var(--bg2); border: 1px solid var(--bdr); border-radius: 12px; padding: 20px 24px; margin-bottom: 40px; }
+.mp .help-article-toc h4 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--w55); margin-bottom: 12px; }
+.mp .help-article-toc ul { list-style: none; padding: 0; margin: 0; }
+.mp .help-article-toc li a { font-size: 14px; color: var(--w55); display: block; padding: 4px 0; transition: color .15s; }
+.mp .help-article-toc li a:hover { color: var(--acc); }
+.mp .help-section { margin-bottom: 48px; scroll-margin-top: 80px; }
+.mp .help-section h2 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--bdr); }
+.mp .help-section p { font-size: 14px; color: var(--w55); line-height: 1.8; margin-bottom: 12px; }
+.mp .help-section ul, .mp .help-section ol { padding-left: 20px; color: var(--w55); font-size: 14px; line-height: 1.8; }
+.mp .help-section li { margin-bottom: 6px; }
+.mp .help-section strong { color: var(--w80); }
+
+/* ── Pricing comparison table ────────────────────────────────────────────── */
+.mp .comparison-table { width: 100%; border-collapse: collapse; margin-bottom: 48px; font-size: 14px; }
+.mp .comparison-table th { padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: var(--w55); border-bottom: 1px solid var(--bdr); }
+.mp .comparison-table th:first-child { color: var(--w55); }
+.mp .comparison-table th.sc-col { color: var(--acc); }
+.mp .comparison-table td { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.05); color: var(--w55); }
+.mp .comparison-table td.sc-col { color: #fff; font-weight: 500; }
+.mp .comparison-table tr:hover td { background: rgba(255,255,255,.02); }
+.mp .cmp-yes { color: var(--acc); font-weight: 600; }
+.mp .cmp-no { color: rgba(255,255,255,.25); }
+.mp .cmp-partial { color: #f59e0b; }
+.mp .guarantee-bar { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 16px 24px; background: rgba(204,255,0,.08); border: 1px solid rgba(204,255,0,.2); border-radius: 12px; margin-bottom: 28px; font-size: 14px; color: var(--acc); font-weight: 600; }
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mp .feat-grid { grid-template-columns: 1fr; }
+  .mp .security-grid { grid-template-columns: 1fr; }
+  .mp .help-cat-grid { grid-template-columns: 1fr; }
+  .mp .values-grid { grid-template-columns: repeat(2, 1fr); }
+  .mp .social-proof-bar { flex-direction: column; gap: 24px; }
+  .mp .sp-sep { display: none; }
+  .mp .sp-item { padding: 0; }
+  .mp .comparison-table { font-size: 12px; }
+  .mp .comparison-table th, .mp .comparison-table td { padding: 10px 8px; }
+}

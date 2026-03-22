@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Gas Engineer Compliance Software UK — SubCompliant',
+  title: 'Gas Engineer Compliance Software UK',
   description: 'SubCompliant trade compliance template for Gas Safe engineers and plumbers. Pre-built document requirements: Gas Safe registration, CSCS card, Public Liability Insurance, ACS certification. Start free trial — 14 days.',
 }
 

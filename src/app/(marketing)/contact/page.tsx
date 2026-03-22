@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import ContactForm from './ContactForm'
 
 export const metadata: Metadata = {
-  title: 'Contact SubCompliant',
+  title: 'Contact',
   description: 'Contact the SubCompliant team. Get support, request a demo, or speak to our sales team about Enterprise pricing.',
 }
 
@@ -23,6 +23,7 @@ export default function ContactPage() {
                 <div className="ch-title">General Support</div>
                 <div className="ch-desc">Questions about your account, billing, or how the platform works.</div>
                 <a href="mailto:hello@subcompliant.co.uk" className="ch-link" data-acc>hello@subcompliant.co.uk</a>
+                <div className="ch-response">⏱ Usually replies within 4 hours (Mon–Fri)</div>
               </div>
             </div>
             <div className="channel-card">
@@ -31,6 +32,7 @@ export default function ContactPage() {
                 <div className="ch-title">Enterprise Sales</div>
                 <div className="ch-desc">Interested in the Enterprise plan or white-label options? Let&apos;s talk.</div>
                 <a href="mailto:sales@subcompliant.co.uk" className="ch-link" data-acc>sales@subcompliant.co.uk</a>
+                <div className="ch-response">⏱ We&apos;ll get back to you within 1 business day</div>
               </div>
             </div>
             <div className="channel-card">
@@ -39,6 +41,7 @@ export default function ContactPage() {
                 <div className="ch-title">Data Protection</div>
                 <div className="ch-desc">GDPR requests, data access, or privacy concerns.</div>
                 <a href="mailto:privacy@subcompliant.co.uk" className="ch-link" data-acc>privacy@subcompliant.co.uk</a>
+                <div className="ch-response">⏱ We acknowledge all requests within 72 hours</div>
               </div>
             </div>
             <div className="channel-card">
@@ -47,6 +50,7 @@ export default function ContactPage() {
                 <div className="ch-title">Legal</div>
                 <div className="ch-desc">Legal matters, compliance questions, and terms enquiries.</div>
                 <a href="mailto:legal@subcompliant.co.uk" className="ch-link" data-acc>legal@subcompliant.co.uk</a>
+                <div className="ch-response">⏱ Typically within 2 business days</div>
               </div>
             </div>
           </div>
