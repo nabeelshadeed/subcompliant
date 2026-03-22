@@ -1,8 +1,8 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, SlidersHorizontal } from 'lucide-react'
-import { useTransition, useState, useCallback, useEffect } from 'react'
+import { useState, useEffect } from 'react'
+import { useQueryString } from '@/hooks/useQueryString'
 
 const CATEGORIES = ['insurance', 'certification', 'legal', 'training']
 const SEARCH_DEBOUNCE_MS = 400
@@ -14,17 +14,8 @@ interface Props {
 }
 
 export default function DocumentFilters({ currentSearch, currentStatus, currentCategory }: Props) {
-  const router       = useRouter()
-  const searchParams = useSearchParams()
-  const [, startTransition] = useTransition()
+  const update = useQueryString()
   const [search, setSearch] = useState(currentSearch ?? '')
-
-  const update = useCallback((key: string, value: string) => {
-    const sp = new URLSearchParams(searchParams.toString())
-    value ? sp.set(key, value) : sp.delete(key)
-    sp.delete('page')
-    startTransition(() => router.push(`?${sp.toString()}`))
-  }, [searchParams, router])
 
   // Sync local search from URL when navigating back
   useEffect(() => {
@@ -34,7 +25,7 @@ export default function DocumentFilters({ currentSearch, currentStatus, currentC
   // Debounced URL update for search input
   useEffect(() => {
     if (search === (currentSearch ?? '')) return
-    const t = setTimeout(() => update('q', search), SEARCH_DEBOUNCE_MS)
+    const t = setTimeout(() => update({ q: search }), SEARCH_DEBOUNCE_MS)
     return () => clearTimeout(t)
   }, [search, currentSearch, update])
 
@@ -59,7 +50,7 @@ export default function DocumentFilters({ currentSearch, currentStatus, currentC
         <select
           aria-label="Filter by category"
           value={currentCategory ?? ''}
-          onChange={e => update('category', e.target.value)}
+          onChange={e => update({ category: e.target.value })}
           className="pl-8 pr-8 py-2 text-sm border border-white/10 rounded-lg bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-accent appearance-none"
         >
           <option value="">All categories</option>

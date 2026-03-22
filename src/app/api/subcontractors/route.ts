@@ -73,10 +73,11 @@ export async function GET(req: NextRequest) {
 
 const inviteSchema = z.object({
   email:                z.string().email(),
-  name:                 z.string().optional(),
-  requiredDocTypeSlugs: z.array(z.string()).optional(),
+  name:                 z.string().max(200).optional(),
+  requiredDocTypeSlugs: z.array(z.string()).max(20).optional(),
   customMessage:        z.string().max(500).optional(),
-  expiryHours:          z.number().default(72),
+  // Clamp to 1–720 hours (1h min prevents already-expired sessions; 720h = 30 days max)
+  expiryHours:          z.number().min(1, 'expiryHours must be at least 1').max(720, 'expiryHours cannot exceed 720 (30 days)').default(72),
   projectId:            z.string().uuid().optional(),
 })
 

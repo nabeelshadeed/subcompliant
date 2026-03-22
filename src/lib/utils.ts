@@ -64,6 +64,33 @@ export function riskColor(level: string): string {
   }
 }
 
+export function subStatusColor(status: string): string {
+  switch (status) {
+    case 'active':    return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+    case 'invited':   return 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+    case 'suspended': return 'bg-red-500/20 text-red-400 border-red-500/30'
+    default:          return 'bg-white/10 text-white/60 border-white/20'
+  }
+}
+
+export function docCategoryBg(category: string | null | undefined): string {
+  switch (category) {
+    case 'insurance':     return 'bg-blue-500/20'
+    case 'certification': return 'bg-purple-500/20'
+    case 'legal':         return 'bg-orange-500/20'
+    default:              return 'bg-white/10'
+  }
+}
+
+export function docCategoryIconColor(category: string | null | undefined): string {
+  switch (category) {
+    case 'insurance':     return 'text-blue-400'
+    case 'certification': return 'text-purple-400'
+    case 'legal':         return 'text-orange-400'
+    default:              return 'text-white/50'
+  }
+}
+
 export function docStatusColor(status: string): string {
   switch (status) {
     case 'approved':    return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30'

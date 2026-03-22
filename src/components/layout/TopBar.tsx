@@ -1,13 +1,22 @@
 'use client'
 
 import { UserButton, OrganizationSwitcher } from '@clerk/nextjs'
-import { Bell } from 'lucide-react'
+import { Bell, Menu } from 'lucide-react'
 import Link from 'next/link'
 
-export default function TopBar() {
+export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
   return (
-    <header className="h-16 flex items-center justify-between px-6 flex-shrink-0 border-b border-white/10" style={{ background: 'var(--app-bg2)' }}>
-      <div className="flex items-center gap-4">
+    <header className="h-16 flex items-center justify-between px-4 md:px-6 flex-shrink-0 border-b border-white/10" style={{ background: 'var(--app-bg2)' }}>
+      <div className="flex items-center gap-3">
+        {/* Hamburger — mobile only */}
+        <button
+          type="button"
+          onClick={onMenuClick}
+          className="md:hidden p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+          aria-label="Open menu"
+        >
+          <Menu size={20} />
+        </button>
         <OrganizationSwitcher
           hidePersonal
           appearance={{

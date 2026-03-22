@@ -1,14 +1,14 @@
-import { getServerUserId } from '@/lib/auth/get-auth'
-import { redirect, notFound } from 'next/navigation'
+import { requireUser } from '@/lib/auth/require-auth'
+import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import {
-  users, subcontractors, subProfiles, complianceDocuments, documentTypes, riskScores
+  subcontractors, subProfiles, complianceDocuments, documentTypes, riskScores
 } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { calculateCompliance } from '@/lib/compliance-engine'
 import { calculateRiskScore } from '@/lib/risk-engine'
-import { ComplianceBadge, DocStatusBadge, RiskBadge } from '@/components/ui/Badges'
-import { formatDate, formatBytes, initials } from '@/lib/utils'
+import { ComplianceBadge, DocStatusBadge, RiskBadge, SubStatusBadge } from '@/components/ui/Badges'
+import { formatDate, formatBytes, initials, docCategoryBg, docCategoryIconColor } from '@/lib/utils'
 import Link from 'next/link'
 import {
   ArrowLeft, Mail, Phone, Building2, FileText,
@@ -23,15 +23,8 @@ interface Props { params: Promise<{ id: string }> }
 export const metadata: Metadata = { title: 'Subcontractor Profile' }
 
 export default async function SubcontractorProfilePage({ params }: Props) {
-  const clerkUserId = await getServerUserId()
-  if (!clerkUserId) redirect('/auth/sign-in')
-
+  const user = await requireUser()
   const { id } = await params
-
-  const user = await db.query.users.findFirst({
-    where: eq(users.clerkUserId, clerkUserId),
-  })
-  if (!user) redirect('/auth/sign-up')
 
   const sub = await db.query.subcontractors.findFirst({
     where: and(
@@ -144,14 +137,7 @@ export default async function SubcontractorProfilePage({ params }: Props) {
             </div>
           </div>
 
-          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border flex-shrink-0 ${
-            sub.status === 'active'    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-            sub.status === 'invited'   ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
-            sub.status === 'suspended' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
-            'bg-white/10 text-white/60 border-white/20'
-          }`}>
-            {sub.status}
-          </span>
+          <SubStatusBadge status={sub.status} />
         </div>
       </div>
 
@@ -228,18 +214,8 @@ export default async function SubcontractorProfilePage({ params }: Props) {
               <div key={doc.id} className="px-5 py-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-start gap-3">
                   {/* Icon */}
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                    doc.docTypeCategory === 'insurance'     ? 'bg-blue-500/20' :
-                    doc.docTypeCategory === 'certification' ? 'bg-purple-500/20' :
-                    doc.docTypeCategory === 'legal'         ? 'bg-orange-500/20' :
-                    'bg-white/10'
-                  }`}>
-                    <FileText size={15} className={
-                      doc.docTypeCategory === 'insurance'     ? 'text-blue-400' :
-                      doc.docTypeCategory === 'certification' ? 'text-purple-400' :
-                      doc.docTypeCategory === 'legal'         ? 'text-orange-400' :
-                      'text-white/50'
-                    } />
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${docCategoryBg(doc.docTypeCategory)}`}>
+                    <FileText size={15} className={docCategoryIconColor(doc.docTypeCategory)} />
                   </div>
 
                   {/* Content */}

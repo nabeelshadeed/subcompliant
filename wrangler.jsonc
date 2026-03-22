@@ -21,6 +21,10 @@
   "vars": {
     "NEXT_PUBLIC_APP_URL": "https://subcompliant.skypathwayz.workers.dev"
   },
+  // Cron trigger — runs expiry-reminder job at 08:00 UTC every day.
+  "triggers": {
+    "crons": ["0 8 * * *"]
+  },
   // Emit structured logs visible in `wrangler tail` and the CF dashboard.
   // head_sampling_rate: 1 = capture every request (reduce in high-traffic prod).
   "observability": {

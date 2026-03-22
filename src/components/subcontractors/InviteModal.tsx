@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Mail, Send, ChevronDown } from 'lucide-react'
+import { X, Mail, Send, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface InviteModalProps {
-  open:     boolean
-  onClose:  () => void
+interface Props {
+  open:      boolean
+  onClose:   () => void
   onSuccess?: () => void
 }
 
@@ -19,14 +19,17 @@ const DOC_TYPES = [
   { slug: 'niceic',              name: 'NICEIC Registration' },
 ]
 
-export default function InviteModal({ open, onClose, onSuccess }: InviteModalProps) {
-  const [email,      setEmail]      = useState('')
-  const [name,       setName]       = useState('')
-  const [message,    setMessage]    = useState('')
-  const [selected,   setSelected]   = useState<string[]>(['public-liability', 'cscs-card'])
-  const [loading,    setLoading]    = useState(false)
-  const [error,      setError]      = useState<string | null>(null)
-  const [sent,       setSent]       = useState(false)
+const DEFAULT_SELECTED = ['public-liability', 'cscs-card']
+
+export default function InviteModal({ open, onClose, onSuccess }: Props) {
+  const [email,       setEmail]       = useState('')
+  const [name,        setName]        = useState('')
+  const [message,     setMessage]     = useState('')
+  const [selected,    setSelected]    = useState<string[]>(DEFAULT_SELECTED)
+  const [loading,     setLoading]     = useState(false)
+  const [error,       setError]       = useState<string | null>(null)
+  const [sent,        setSent]        = useState(false)
+  const [showErrors,  setShowErrors]  = useState(false)
 
   if (!open) return null
 
@@ -38,6 +41,7 @@ export default function InviteModal({ open, onClose, onSuccess }: InviteModalPro
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!email.trim()) { setShowErrors(true); return }
     setLoading(true)
     setError(null)
 
@@ -45,7 +49,7 @@ export default function InviteModal({ open, onClose, onSuccess }: InviteModalPro
       const res = await fetch('/api/auth/magic-link', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
+        body: JSON.stringify({
           subContractorEmail:   email,
           subContractorName:    name || undefined,
           requiredDocTypeSlugs: selected,
@@ -55,11 +59,7 @@ export default function InviteModal({ open, onClose, onSuccess }: InviteModalPro
       })
 
       const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error?.message ?? 'Failed to send invitation')
-        return
-      }
+      if (!res.ok) { setError(data.error?.message ?? 'Failed to send invitation'); return }
 
       setSent(true)
       setTimeout(() => {
@@ -67,7 +67,7 @@ export default function InviteModal({ open, onClose, onSuccess }: InviteModalPro
         setEmail('')
         setName('')
         setMessage('')
-        setSelected(['public-liability', 'cscs-card'])
+        setSelected(DEFAULT_SELECTED)
         onSuccess?.()
         onClose()
       }, 2000)
@@ -80,70 +80,76 @@ export default function InviteModal({ open, onClose, onSuccess }: InviteModalPro
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg animate-fade-in">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/10 bg-[#111] shadow-2xl shadow-black/60">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-brand-50 rounded-lg flex items-center justify-center">
-              <Mail size={16} className="text-brand-600" />
+            <div className="w-9 h-9 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
+              <Mail size={15} className="text-accent" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-gray-900">Invite Subcontractor</h2>
-              <p className="text-xs text-gray-400">Send a magic link to collect compliance documents</p>
+              <h2 className="text-sm font-semibold text-white">Invite Subcontractor</h2>
+              <p className="text-xs text-white/50">Send a magic link to collect compliance documents</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-            <X size={16} className="text-gray-400" />
+          <button onClick={onClose} className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors">
+            <X size={15} />
           </button>
         </div>
 
         {sent ? (
-          <div className="p-12 flex flex-col items-center text-center">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
-              <Send size={20} className="text-green-600" />
+          <div className="py-12 flex flex-col items-center text-center px-6">
+            <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mb-3">
+              <Send size={20} className="text-emerald-400" />
             </div>
-            <p className="font-semibold text-gray-900">Invitation sent!</p>
-            <p className="text-sm text-gray-400 mt-1">Link expires in 72 hours</p>
+            <p className="font-semibold text-white">Invitation sent!</p>
+            <p className="text-sm text-white/50 mt-1">
+              A magic link has been emailed to <span className="text-white/80 font-medium">{email}</span>. It expires in 72 hours.
+            </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {error && (
-              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              <div className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400">
                 {error}
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Email <span className="text-red-500">*</span>
+                <label className="block text-xs font-medium text-white/60 mb-1">
+                  Email <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="email"
                   required
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={e => { setEmail(e.target.value); setShowErrors(false) }}
                   placeholder="sub@example.com"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 text-sm bg-white/5 border rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-accent ${
+                    showErrors && !email.trim() ? 'border-red-500/60' : 'border-white/10'
+                  }`}
                 />
+                {showErrors && !email.trim() && (
+                  <p className="mt-1 text-xs text-red-400">Email address is required</p>
+                )}
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-xs font-medium text-white/60 mb-1">Name</label>
                 <input
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="John Smith"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-2">Required documents</label>
+              <label className="block text-xs font-medium text-white/60 mb-2">Required documents</label>
               <div className="grid grid-cols-2 gap-2">
                 {DOC_TYPES.map(doc => (
                   <label
@@ -151,8 +157,8 @@ export default function InviteModal({ open, onClose, onSuccess }: InviteModalPro
                     className={cn(
                       'flex items-center gap-2 px-3 py-2 rounded-lg border text-xs cursor-pointer transition-colors',
                       selected.includes(doc.slug)
-                        ? 'border-brand-300 bg-brand-50 text-brand-700'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        ? 'border-accent/40 bg-accent/10 text-accent'
+                        : 'border-white/10 text-white/60 hover:border-white/20 hover:text-white/80'
                     )}
                   >
                     <input
@@ -163,13 +169,11 @@ export default function InviteModal({ open, onClose, onSuccess }: InviteModalPro
                     />
                     <div className={cn(
                       'w-3.5 h-3.5 rounded border flex-shrink-0 flex items-center justify-center',
-                      selected.includes(doc.slug)
-                        ? 'bg-brand-600 border-brand-600'
-                        : 'border-gray-300'
+                      selected.includes(doc.slug) ? 'bg-accent border-accent' : 'border-white/30'
                     )}>
                       {selected.includes(doc.slug) && (
-                        <svg viewBox="0 0 10 8" className="w-2 h-2 fill-white">
-                          <path d="M1 4l3 3 5-6" strokeWidth="1.5" stroke="white" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                        <svg viewBox="0 0 10 8" className="w-2 h-2">
+                          <path d="M1 4l3 3 5-6" strokeWidth="1.5" stroke="#0A0A0A" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       )}
                     </div>
@@ -180,14 +184,14 @@ export default function InviteModal({ open, onClose, onSuccess }: InviteModalPro
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Message (optional)</label>
+              <label className="block text-xs font-medium text-white/60 mb-1">Message (optional)</label>
               <textarea
                 value={message}
                 onChange={e => setMessage(e.target.value)}
                 rows={2}
                 maxLength={500}
                 placeholder="Please upload the documents below so we can continue working together."
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-accent resize-none"
               />
             </div>
 
@@ -195,20 +199,16 @@ export default function InviteModal({ open, onClose, onSuccess }: InviteModalPro
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-white/70 border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={loading || !email}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                disabled={loading}
+                className="flex-1 px-4 py-2.5 text-sm font-semibold text-[#0A0A0A] bg-accent rounded-lg hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
-                {loading ? (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Send size={14} />
-                )}
+                {loading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                 Send Invite
               </button>
             </div>

@@ -1,24 +1,18 @@
-import { getServerUserId } from '@/lib/auth/get-auth'
-import { redirect } from 'next/navigation'
+import { requireUser } from '@/lib/auth/require-auth'
 import { db } from '@/lib/db'
-import { users, subcontractors, subProfiles } from '@/lib/db/schema'
+import { subcontractors, subProfiles } from '@/lib/db/schema'
 import { eq, and, inArray } from 'drizzle-orm'
 import { calculateCompliance, getContractorComplianceOverview } from '@/lib/compliance-engine'
 import { ComplianceBadge } from '@/components/ui/Badges'
 import StatCard from '@/components/ui/StatCard'
-import { CheckCircle2, AlertTriangle, XCircle, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, XCircle, ShieldCheck, Clock, FileBarChart } from 'lucide-react'
 import Link from 'next/link'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Compliance Overview' }
 
 export default async function CompliancePage() {
-  const clerkUserId = await getServerUserId()
-  if (!clerkUserId) redirect('/auth/sign-in')
-
-  const user = await db.query.users.findFirst({ where: eq(users.clerkUserId, clerkUserId) })
-  if (!user) redirect('/auth/sign-up')
-
+  const user = await requireUser()
   const contractorId = user.contractorId
 
   const overview = await getContractorComplianceOverview(contractorId)
@@ -55,6 +49,24 @@ export default async function CompliancePage() {
       <div>
         <h1 className="text-xl font-bold font-display text-white">Compliance Overview</h1>
         <p className="text-sm text-white/60 mt-0.5">Real-time compliance status across all subcontractors</p>
+      </div>
+
+      {/* Quick actions */}
+      <div className="flex gap-3 flex-wrap">
+        <Link
+          href="/compliance/expiry"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 text-white/70 text-sm font-medium rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+        >
+          <Clock size={14} />
+          Expiry Timeline
+        </Link>
+        <Link
+          href="/compliance/report"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 text-white/70 text-sm font-medium rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+        >
+          <FileBarChart size={14} />
+          Audit Report
+        </Link>
       </div>
 
       {/* Stats */}

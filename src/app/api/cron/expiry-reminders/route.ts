@@ -57,12 +57,14 @@ export async function GET(req: NextRequest) {
     // Only send on specific day milestones
     if (![30, 14, 7, 3, 1].includes(daysRemaining)) { skipped++; continue }
 
-    // Check not already sent today for this doc + milestone
+    // Dedup window is 23h (not 24h) to give a 1h buffer against cron drift while
+    // still preventing double-sends from concurrent cron invocations. A daily cron
+    // at 08:00 can fire up to ~1h late in Cloudflare Workers — 23h covers this.
     const alreadySent = await db.query.notifications.findFirst({
       where: and(
         eq(notifications.documentId, doc.docId),
         eq(notifications.eventType, `document_expiring_${daysRemaining}d`),
-        sql`${notifications.createdAt} > NOW() - INTERVAL '20 hours'`,
+        sql`${notifications.createdAt} > NOW() - INTERVAL '23 hours'`,
       ),
     })
 
@@ -139,19 +141,27 @@ export async function GET(req: NextRequest) {
     ))
 
   for (const doc of expiredDocs) {
-    // Update status → expired
-    await db.update(complianceDocuments)
+    // Use WHERE status = 'approved' so this is idempotent — if two cron runs
+    // process the same expired doc concurrently, only the first UPDATE will
+    // match (the second finds status already = 'expired' and affects 0 rows).
+    const [updated] = await db.update(complianceDocuments)
       .set({ status: 'expired', updatedAt: new Date() })
-      .where(eq(complianceDocuments.id, doc.docId))
+      .where(and(
+        eq(complianceDocuments.id, doc.docId),
+        eq(complianceDocuments.status, 'approved'),
+      ))
+      .returning()
+
+    if (!updated) continue  // Already processed by a concurrent run — skip notification
 
     expiredUpdated++
 
-    // Avoid spamming duplicate expired alerts (once per 24h)
+    // Avoid spamming duplicate expired alerts (once per 23h)
     const alreadyAlerted = await db.query.notifications.findFirst({
       where: and(
         eq(notifications.documentId, doc.docId),
         eq(notifications.eventType, 'document_expired'),
-        sql`${notifications.createdAt} > NOW() - INTERVAL '24 hours'`,
+        sql`${notifications.createdAt} > NOW() - INTERVAL '23 hours'`,
       ),
     })
 

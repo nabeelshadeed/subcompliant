@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, ShieldCheck, FileText,
-  Bell, Settings, CreditCard,
+  Bell, Settings, CreditCard, X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -21,7 +21,13 @@ const BOTTOM = [
   { href: '/settings',         label: 'Settings', icon: Settings   },
 ]
 
-export default function Sidebar({ recentNotifCount = 0 }: { recentNotifCount?: number }) {
+export default function Sidebar({
+  recentNotifCount = 0,
+  onClose,
+}: {
+  recentNotifCount?: number
+  onClose?: () => void
+}) {
   const pathname = usePathname()
 
   function isActive(href: string) {
@@ -29,15 +35,26 @@ export default function Sidebar({ recentNotifCount = 0 }: { recentNotifCount?: n
   }
 
   return (
-    <aside className="w-60 flex flex-col flex-shrink-0 border-r border-white/10" style={{ background: 'var(--app-bg2)' }}>
+    <aside className="w-60 flex flex-col flex-shrink-0 border-r border-white/10 h-full" style={{ background: 'var(--app-bg2)' }}>
       {/* Logo */}
-      <div className="h-16 flex items-center px-5 border-b border-white/10">
+      <div className="h-16 flex items-center px-5 border-b border-white/10 justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent/20 border border-accent/30">
             <ShieldCheck className="w-4.5 h-4.5 text-accent" size={18} />
           </div>
           <span className="font-display font-bold text-white text-[15px]">Sub<span className="text-accent">Compliant</span></span>
         </div>
+        {/* Close button — mobile only */}
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="md:hidden p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Close menu"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       {/* Primary nav */}

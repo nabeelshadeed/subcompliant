@@ -1,7 +1,6 @@
-import { getServerUserId } from '@/lib/auth/get-auth'
-import { redirect } from 'next/navigation'
+import { requireUser } from '@/lib/auth/require-auth'
 import { db } from '@/lib/db'
-import { users, notifications } from '@/lib/db/schema'
+import { notifications } from '@/lib/db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { formatRelative } from '@/lib/utils'
 import { Bell, AlertTriangle, Info, XCircle } from 'lucide-react'
@@ -11,11 +10,7 @@ import { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Notifications' }
 
 export default async function NotificationsPage() {
-  const clerkUserId = await getServerUserId()
-  if (!clerkUserId) redirect('/auth/sign-in')
-
-  const user = await db.query.users.findFirst({ where: eq(users.clerkUserId, clerkUserId) })
-  if (!user) redirect('/auth/sign-up')
+  const user = await requireUser()
 
   const notifs = await db.query.notifications.findMany({
     where: eq(notifications.contractorId, user.contractorId),

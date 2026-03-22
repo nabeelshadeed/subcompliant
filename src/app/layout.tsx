@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
 import { Syne, DM_Sans } from 'next/font/google'
+import { ToastProvider } from '@/components/ui/Toast'
 import './globals.css'
 
 const syne = Syne({
@@ -82,7 +83,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
           />
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </body>
       </html>
     </ClerkProvider>

@@ -1,14 +1,20 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Search, UserPlus, Filter } from 'lucide-react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Search, UserPlus, Lock, Users } from 'lucide-react'
 import InviteModal from '@/components/subcontractors/InviteModal'
+import BulkInviteModal from '@/components/subcontractors/BulkInviteModal'
+import UpgradeModal from '@/components/ui/UpgradeModal'
+import { useQueryString } from '@/hooks/useQueryString'
 
 interface Props {
   total:          number
   currentSearch?: string
   currentStatus?: string
+  currentSubs?:   number
+  subLimit?:      number
+  plan?:          string
 }
 
 const STATUSES = [
@@ -19,17 +25,13 @@ const STATUSES = [
   { value: 'suspended', label: 'Suspended' },
 ]
 
-export default function SubcontractorsClient({ total, currentSearch, currentStatus }: Props) {
-  const router      = useRouter()
-  const [inviteOpen, setInviteOpen] = useState(false)
-  const [, startTransition] = useTransition()
-
-  function update(params: Record<string, string>) {
-    const sp = new URLSearchParams(window.location.search)
-    Object.entries(params).forEach(([k, v]) => v ? sp.set(k, v) : sp.delete(k))
-    sp.delete('page')
-    startTransition(() => router.push(`?${sp.toString()}`))
-  }
+export default function SubcontractorsClient({ total, currentSearch, currentStatus, currentSubs = 0, subLimit = 10, plan = 'starter' }: Props) {
+  const router       = useRouter()
+  const [inviteOpen,  setInviteOpen]  = useState(false)
+  const [bulkOpen,    setBulkOpen]    = useState(false)
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
+  const update    = useQueryString()
+  const atLimit   = currentSubs >= subLimit
 
   return (
     <>
@@ -64,12 +66,30 @@ export default function SubcontractorsClient({ total, currentSearch, currentStat
           </select>
 
           <button
-            onClick={() => setInviteOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-[#0A0A0A] text-sm font-semibold rounded-lg hover:bg-accent-hover transition-colors"
+            onClick={() => setBulkOpen(true)}
+            className="inline-flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 text-white/70 text-sm font-medium rounded-lg hover:bg-white/10 hover:text-white transition-colors"
           >
-            <UserPlus size={14} />
-            Invite
+            <Users size={14} />
+            Bulk invite
           </button>
+
+          {atLimit ? (
+            <button
+              onClick={() => setUpgradeOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-[#0A0A0A] text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
+            >
+              <Lock size={14} />
+              Invite ({currentSubs}/{subLimit})
+            </button>
+          ) : (
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-[#0A0A0A] text-sm font-semibold rounded-lg hover:bg-accent-hover transition-colors"
+            >
+              <UserPlus size={14} />
+              Invite
+            </button>
+          )}
         </div>
       </div>
 
@@ -77,6 +97,26 @@ export default function SubcontractorsClient({ total, currentSearch, currentStat
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
         onSuccess={() => router.refresh()}
+      />
+
+      <BulkInviteModal
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        onSuccess={() => router.refresh()}
+      />
+
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        featureName="Subcontractor limit reached"
+        reason={`Your ${plan} plan supports up to ${subLimit} subcontractors. Upgrade to Pro to manage up to 50 — and unlock compliance scores, HSE audit reports, and SMS alerts.`}
+        bullets={[
+          `Up to 50 subcontractors (you have ${currentSubs})`,
+          'Real-time compliance scores & risk ratings',
+          'One-click HSE audit PDF reports',
+          'SMS expiry alerts direct to subcontractors',
+          '3 user seats included',
+        ]}
       />
     </>
   )

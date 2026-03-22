@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import FileDropzone from '@/components/documents/FileDropzone'
-import { ShieldCheck, CheckCircle2, XCircle, Clock, Loader2 } from 'lucide-react'
+import { ShieldCheck, CheckCircle2, XCircle, Clock, Loader2, RefreshCw, Mail } from 'lucide-react'
 
 interface DocType {
   id:          string
@@ -25,23 +25,30 @@ interface SessionData {
 }
 
 type UploadStatus = 'pending' | 'uploaded' | 'error'
+type ErrorCode = 'SESSION_EXPIRED' | 'SESSION_COMPLETED' | 'SESSION_NOT_FOUND' | 'NO_TOKEN' | 'NETWORK' | string
+
+interface LoadError {
+  code:    ErrorCode
+  message: string
+}
 
 export default function UploadPage() {
   const searchParams = useSearchParams()
   const token        = searchParams.get('t')
 
-  const [session,   setSession]   = useState<SessionData | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
-  const [loading,   setLoading]   = useState(true)
-  const [subEmail,  setSubEmail]  = useState('')
-  const [subName,   setSubName]   = useState('')
+  const [session,    setSession]    = useState<SessionData | null>(null)
+  const [loadError,  setLoadError]  = useState<LoadError | null>(null)
+  const [loading,    setLoading]    = useState(true)
+  const [subEmail,   setSubEmail]   = useState('')
+  const [subName,    setSubName]    = useState('')
   const [subCompany, setSubCompany] = useState('')
-  const [step,      setStep]      = useState<'details' | 'upload' | 'done'>('details')
-  const [statuses,  setStatuses]  = useState<Record<string, UploadStatus>>({})
+  const [step,       setStep]       = useState<'details' | 'upload' | 'done'>('details')
+  const [statuses,   setStatuses]   = useState<Record<string, UploadStatus>>({})
+  const [showErrors, setShowErrors] = useState(false)
 
   useEffect(() => {
     if (!token) {
-      setLoadError('No upload token provided. Please use the link sent to your email.')
+      setLoadError({ code: 'NO_TOKEN', message: 'No upload token provided.' })
       setLoading(false)
       return
     }
@@ -50,7 +57,7 @@ export default function UploadPage() {
       .then(r => r.json())
       .then(data => {
         if (data.error) {
-          setLoadError(data.error.message ?? 'Invalid or expired link')
+          setLoadError({ code: data.error.code ?? 'UNKNOWN', message: data.error.message ?? 'Invalid or expired link' })
         } else {
           setSession(data)
           setSubEmail(data.prefilledEmail ?? '')
@@ -60,16 +67,25 @@ export default function UploadPage() {
           setStatuses(init)
         }
       })
-      .catch(() => setLoadError('Failed to load upload session'))
+      .catch(() => setLoadError({ code: 'NETWORK', message: 'Could not reach the server. Check your connection and try again.' }))
       .finally(() => setLoading(false))
   }, [token])
 
-  function handleUploaded(docTypeId: string, _documentId: string) {
+  function handleUploaded(docTypeId: string) {
     setStatuses(prev => ({ ...prev, [docTypeId]: 'uploaded' }))
+  }
+
+  function handleContinue() {
+    if (!subName.trim() || !subEmail.trim()) {
+      setShowErrors(true)
+      return
+    }
+    setStep('upload')
   }
 
   const allUploaded = session?.requiredDocTypes.every(d => statuses[d.id] === 'uploaded')
 
+  // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -78,20 +94,85 @@ export default function UploadPage() {
     )
   }
 
+  // ── Error states — each has a distinct message + recovery action ───────────
   if (loadError) {
+    if (loadError.code === 'SESSION_COMPLETED') {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 max-w-md w-full text-center">
+            <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 size={26} className="text-green-600" />
+            </div>
+            <h1 className="text-lg font-bold text-gray-900 mb-2">Documents already submitted</h1>
+            <p className="text-sm text-gray-500">
+              You've already uploaded documents via this link. Your contractor will review them and contact you if anything is needed.
+            </p>
+          </div>
+        </div>
+      )
+    }
+
+    if (loadError.code === 'SESSION_EXPIRED') {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 max-w-md w-full text-center">
+            <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock size={26} className="text-amber-600" />
+            </div>
+            <h1 className="text-lg font-bold text-gray-900 mb-2">This link has expired</h1>
+            <p className="text-sm text-gray-500 mb-5">
+              Upload links are valid for 72 hours. Ask your contractor to send you a new one.
+            </p>
+            <a
+              href={`mailto:?subject=Please%20send%20a%20new%20upload%20link&body=Hi%2C%20the%20upload%20link%20you%20sent%20has%20expired.%20Could%20you%20please%20send%20a%20new%20one%3F`}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors"
+            >
+              <Mail size={14} />
+              Email your contractor
+            </a>
+          </div>
+        </div>
+      )
+    }
+
+    if (loadError.code === 'NETWORK') {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 max-w-md w-full text-center">
+            <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <RefreshCw size={26} className="text-gray-500" />
+            </div>
+            <h1 className="text-lg font-bold text-gray-900 mb-2">Connection error</h1>
+            <p className="text-sm text-gray-500 mb-5">{loadError.message}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors"
+            >
+              <RefreshCw size={14} />
+              Try again
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    // SESSION_NOT_FOUND or unknown
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 max-w-md w-full text-center">
-          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <XCircle size={22} className="text-red-500" />
+          <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <XCircle size={26} className="text-red-500" />
           </div>
-          <h1 className="text-lg font-bold text-gray-900 mb-2">Link Invalid</h1>
-          <p className="text-sm text-gray-500">{loadError}</p>
+          <h1 className="text-lg font-bold text-gray-900 mb-2">Link not found</h1>
+          <p className="text-sm text-gray-500">
+            This upload link doesn't exist or was never created. Please use the exact link from your invitation email, or ask your contractor to resend it.
+          </p>
         </div>
       </div>
     )
   }
 
+  // ── Done ──────────────────────────────────────────────────────────────────
   if (step === 'done') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -99,20 +180,28 @@ export default function UploadPage() {
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 size={28} className="text-green-600" />
           </div>
-          <h1 className="text-lg font-bold text-gray-900 mb-2">Documents Submitted!</h1>
-          <p className="text-sm text-gray-500">
-            Your documents have been received by <strong>{session?.contractorName}</strong>.
-            They will be reviewed shortly and you'll hear back by email.
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Documents submitted!</h1>
+          <p className="text-sm text-gray-500 mb-4">
+            <strong>{session?.contractorName}</strong> has received your documents and will review them shortly. You'll get an email if anything needs attention.
           </p>
+          <div className="mt-4 bg-gray-50 rounded-xl p-4 text-left space-y-1.5">
+            {session?.requiredDocTypes.map(d => (
+              <div key={d.id} className="flex items-center gap-2 text-xs text-gray-700">
+                <CheckCircle2 size={13} className="text-green-500 flex-shrink-0" />
+                {d.name}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )
   }
 
+  // ── Main upload flow ───────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-lg mx-auto space-y-5">
-        {/* Header */}
+        {/* Brand header */}
         <div className="text-center">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="w-9 h-9 bg-brand-600 rounded-xl flex items-center justify-center">
@@ -121,19 +210,22 @@ export default function UploadPage() {
             <span className="text-sm font-semibold text-gray-500">SubCompliant</span>
           </div>
           <h1 className="text-xl font-bold text-gray-900">
-            {session?.contractorName} requests your documents
+            {session?.contractorName} needs your documents
           </h1>
           {session?.customMessage && (
-            <p className="mt-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-xl px-4 py-3 mt-3 text-left italic">
+            <p className="mt-3 text-sm text-gray-500 bg-white border border-gray-200 rounded-xl px-4 py-3 text-left italic">
               "{session.customMessage}"
             </p>
           )}
         </div>
 
-        {/* Step 1: Your details */}
+        {/* Step 1: Details */}
         {step === 'details' && (
           <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
-            <h2 className="text-sm font-semibold text-gray-900">Your details</h2>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-5 h-5 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
+              <h2 className="text-sm font-semibold text-gray-900">Your details</h2>
+            </div>
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -141,12 +233,16 @@ export default function UploadPage() {
                 </label>
                 <input
                   type="text"
-                  required
                   value={subName}
-                  onChange={e => setSubName(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  onChange={e => { setSubName(e.target.value); setShowErrors(false) }}
+                  className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 ${
+                    showErrors && !subName.trim() ? 'border-red-400 bg-red-50' : 'border-gray-200'
+                  }`}
                   placeholder="John Smith"
                 />
+                {showErrors && !subName.trim() && (
+                  <p className="mt-1 text-xs text-red-600">Please enter your full name</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -154,12 +250,16 @@ export default function UploadPage() {
                 </label>
                 <input
                   type="email"
-                  required
                   value={subEmail}
-                  onChange={e => setSubEmail(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  onChange={e => { setSubEmail(e.target.value); setShowErrors(false) }}
+                  className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 ${
+                    showErrors && !subEmail.trim() ? 'border-red-400 bg-red-50' : 'border-gray-200'
+                  }`}
                   placeholder="you@example.com"
                 />
+                {showErrors && !subEmail.trim() && (
+                  <p className="mt-1 text-xs text-red-600">Please enter your email address</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Company name</label>
@@ -174,11 +274,10 @@ export default function UploadPage() {
             </div>
 
             <button
-              disabled={!subName || !subEmail}
-              onClick={() => setStep('upload')}
-              className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
+              onClick={handleContinue}
+              className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors"
             >
-              Continue to Upload
+              Continue to Upload →
             </button>
           </div>
         )}
@@ -206,13 +305,18 @@ export default function UploadPage() {
                   }
                 </div>
 
-                {statuses[docType.id] !== 'uploaded' && (
+                {statuses[docType.id] !== 'uploaded' ? (
                   <FileDropzone
                     documentTypeId={docType.id}
                     documentTypeName={docType.name}
                     uploadToken={token ?? undefined}
-                    onUploaded={docId => handleUploaded(docType.id, docId)}
+                    subName={subName}
+                    subEmail={subEmail}
+                    subCompany={subCompany}
+                    onUploaded={() => handleUploaded(docType.id)}
                   />
+                ) : (
+                  <p className="text-xs text-green-600 font-medium">✓ Uploaded</p>
                 )}
               </div>
             ))}
@@ -220,14 +324,19 @@ export default function UploadPage() {
             {allUploaded && (
               <button
                 onClick={() => setStep('done')}
-                className="w-full py-3 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-colors"
+                className="w-full py-3 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
               >
-                <span className="flex items-center justify-center gap-2">
-                  <CheckCircle2 size={16} />
-                  Submit All Documents
-                </span>
+                <CheckCircle2 size={16} />
+                Submit All Documents
               </button>
             )}
+
+            <button
+              onClick={() => setStep('details')}
+              className="w-full py-2 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              ← Back to details
+            </button>
           </div>
         )}
 

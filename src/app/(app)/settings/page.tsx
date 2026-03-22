@@ -1,27 +1,16 @@
-import { getServerUserId } from '@/lib/auth/get-auth'
-import { redirect } from 'next/navigation'
-import { db } from '@/lib/db'
-import { users, contractors } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { requireUser } from '@/lib/auth/require-auth'
 import { OrganizationProfile } from '@clerk/nextjs'
 import Link from 'next/link'
 import { Settings, CreditCard, Users, Shield } from 'lucide-react'
 import { Metadata } from 'next'
+import OrgEditForm from './OrgEditForm'
+import DangerZone from './DangerZone'
 
 export const metadata: Metadata = { title: 'Settings' }
 
 export default async function SettingsPage() {
-  const clerkUserId = await getServerUserId()
-  if (!clerkUserId) redirect('/auth/sign-in')
-
-  const user = await db.query.users.findFirst({
-    where: eq(users.clerkUserId, clerkUserId),
-    with:  { contractor: true },
-  })
-
-  if (!user) redirect('/auth/sign-up')
-
-  const { contractor } = user as any
+  const user = await requireUser()
+  const contractor = user.contractor
 
   const settingsSections = [
     { href: '/settings',         label: 'Organisation',  icon: Settings,    active: true },
@@ -53,14 +42,9 @@ export default async function SettingsPage() {
         ))}
       </div>
 
-      {/* Org info card */}
-      <div className="card p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-white">Organisation Details</h2>
+      {/* Plan / slug info card */}
+      <div className="card p-5">
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-xs font-medium text-white/50 mb-0.5">Name</p>
-            <p className="text-white">{contractor?.name ?? '—'}</p>
-          </div>
           <div>
             <p className="text-xs font-medium text-white/50 mb-0.5">Slug</p>
             <p className="text-white/60 font-mono text-xs">{contractor?.slug}</p>
@@ -75,18 +59,6 @@ export default async function SettingsPage() {
             <p className="text-xs font-medium text-white/50 mb-0.5">Subcontractor limit</p>
             <p className="text-white">{contractor?.subLimit}</p>
           </div>
-          {contractor?.companiesHouseNo && (
-            <div>
-              <p className="text-xs font-medium text-white/50 mb-0.5">Companies House No.</p>
-              <p className="text-white font-mono text-xs">{contractor.companiesHouseNo}</p>
-            </div>
-          )}
-          {contractor?.vatNumber && (
-            <div>
-              <p className="text-xs font-medium text-white/50 mb-0.5">VAT Number</p>
-              <p className="text-white font-mono text-xs">{contractor.vatNumber}</p>
-            </div>
-          )}
         </div>
 
         {contractor?.trialEndsAt && new Date(contractor.trialEndsAt) > new Date() && (
@@ -97,6 +69,9 @@ export default async function SettingsPage() {
           </div>
         )}
       </div>
+
+      {/* Editable org details */}
+      <OrgEditForm contractor={contractor} />
 
       {/* Team members via Clerk */}
       <div className="card overflow-hidden">
@@ -142,6 +117,12 @@ export default async function SettingsPage() {
             <span className="text-xs font-medium text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded-full">Clerk</span>
           </div>
         </div>
+      </div>
+
+      {/* Data export + danger zone */}
+      <div>
+        <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Data & Account</h2>
+        <DangerZone isOwner={(user as any).role === 'owner'} />
       </div>
     </div>
   )

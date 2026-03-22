@@ -1,16 +1,16 @@
-import { getServerUserId } from '@/lib/auth/get-auth'
-import { redirect } from 'next/navigation'
+import { requireUser } from '@/lib/auth/require-auth'
 import { db } from '@/lib/db'
-import { users, complianceDocuments, documentTypes, subProfiles, subcontractors } from '@/lib/db/schema'
+import { complianceDocuments, documentTypes, subProfiles, subcontractors } from '@/lib/db/schema'
 import { eq, and, desc, sql, isNull } from 'drizzle-orm'
 import { DocStatusBadge } from '@/components/ui/Badges'
-import { formatDate, formatBytes, buildQueryString } from '@/lib/utils'
+import { formatDate, formatBytes, docCategoryBg, docCategoryIconColor } from '@/lib/utils'
 import { FileText } from 'lucide-react'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import EmptyState from '@/components/ui/EmptyState'
 import DocumentFilters from '@/components/documents/DocumentFilters'
 import { DownloadButton } from '@/components/documents/DownloadButton'
+import Pagination from '@/components/ui/Pagination'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Documents' }
@@ -22,12 +22,7 @@ interface Props {
 const STATUSES   = ['pending', 'processing', 'approved', 'rejected', 'expired']
 
 export default async function DocumentsPage({ searchParams }: Props) {
-  const clerkUserId = await getServerUserId()
-  if (!clerkUserId) redirect('/auth/sign-in')
-
-  const user = await db.query.users.findFirst({ where: eq(users.clerkUserId, clerkUserId) })
-  if (!user) redirect('/auth/sign-up')
-
+  const user = await requireUser()
   const contractorId = user.contractorId
   const sp = await searchParams
   const page   = parseInt(sp.page ?? '1')
@@ -148,8 +143,10 @@ export default async function DocumentsPage({ searchParams }: Props) {
         <div className="card">
           <EmptyState
             icon={FileText}
-            title="No documents found"
-            body="Documents uploaded by your subcontractors will appear here."
+            title={sp.status || sp.q || sp.category ? 'No documents match your filters' : 'No documents yet'}
+            body={sp.status || sp.q || sp.category
+              ? 'Try clearing your filters to see all documents.'
+              : 'Documents will appear here once your subcontractors upload them via their invite link.'}
           />
         </div>
       ) : (
@@ -170,18 +167,8 @@ export default async function DocumentsPage({ searchParams }: Props) {
                   <tr key={row.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                          row.docTypeCategory === 'insurance'    ? 'bg-blue-500/20' :
-                          row.docTypeCategory === 'certification'? 'bg-purple-500/20' :
-                          row.docTypeCategory === 'legal'        ? 'bg-orange-500/20' :
-                          'bg-white/10'
-                        }`}>
-                          <FileText size={14} className={
-                            row.docTypeCategory === 'insurance'    ? 'text-blue-400' :
-                            row.docTypeCategory === 'certification'? 'text-purple-400' :
-                            row.docTypeCategory === 'legal'        ? 'text-orange-400' :
-                            'text-white/50'
-                          } />
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${docCategoryBg(row.docTypeCategory)}`}>
+                          <FileText size={14} className={docCategoryIconColor(row.docTypeCategory)} />
                         </div>
                         <div>
                           <p className="font-medium text-white">{row.docTypeName}</p>
@@ -231,32 +218,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
             </table>
           </div>
 
-          {/* Pagination */}
-          {total > limit && (
-            <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">
-              <p className="text-xs text-white/50">
-                Showing {offset + 1}–{Math.min(offset + limit, total)} of {total}
-              </p>
-              <div className="flex gap-2">
-                {page > 1 && (
-                  <Link
-                    href={buildQueryString({ ...sp, page: String(page - 1) })}
-                    className="px-3 py-1.5 text-xs font-medium border border-white/20 rounded-lg hover:bg-white/10 text-white"
-                  >
-                    Previous
-                  </Link>
-                )}
-                {offset + limit < total && (
-                  <Link
-                    href={buildQueryString({ ...sp, page: String(page + 1) })}
-                    className="px-3 py-1.5 text-xs font-medium bg-accent text-[#0A0A0A] rounded-lg hover:bg-accent-hover"
-                  >
-                    Next
-                  </Link>
-                )}
-              </div>
-            </div>
-          )}
+          <Pagination page={page} limit={limit} total={total} searchParams={sp} />
         </div>
       )}
     </div>

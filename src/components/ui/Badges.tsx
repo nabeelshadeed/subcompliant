@@ -1,4 +1,4 @@
-import { cn, complianceColor, docStatusColor } from '@/lib/utils'
+import { cn, complianceColor, docStatusColor, subStatusColor } from '@/lib/utils'
 import { CheckCircle2, AlertTriangle, XCircle, Clock, AlertCircle } from 'lucide-react'
 
 export function ComplianceBadge({ status }: { status: string }) {
@@ -55,6 +55,17 @@ export function DocStatusBadge({ status }: { status: string }) {
     )}>
       {icons[status]}
       {labels[status] ?? status}
+    </span>
+  )
+}
+
+export function SubStatusBadge({ status }: { status: string }) {
+  return (
+    <span className={cn(
+      'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border capitalize',
+      subStatusColor(status)
+    )}>
+      {status}
     </span>
   )
 }

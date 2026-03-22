@@ -1,13 +1,14 @@
-import { getServerUserId } from '@/lib/auth/get-auth'
-import { redirect } from 'next/navigation'
+import { requireUser } from '@/lib/auth/require-auth'
 import { db } from '@/lib/db'
-import { users, subcontractors, subProfiles, riskScores } from '@/lib/db/schema'
+import { contractors, subcontractors, subProfiles, riskScores } from '@/lib/db/schema'
 import { eq, and, inArray, desc, sql } from 'drizzle-orm'
 import Link from 'next/link'
-import { ComplianceBadge, RiskBadge } from '@/components/ui/Badges'
-import { formatDate, formatRelative, initials, buildQueryString } from '@/lib/utils'
+import { ComplianceBadge, RiskBadge, SubStatusBadge } from '@/components/ui/Badges'
+import { formatDate, formatRelative, initials } from '@/lib/utils'
 import SubcontractorsClient from './SubcontractorsClient'
 import EmptyState from '@/components/ui/EmptyState'
+import ChaseButton from '@/components/subcontractors/ChaseButton'
+import Pagination from '@/components/ui/Pagination'
 import { Users } from 'lucide-react'
 
 interface Props {
@@ -15,16 +16,15 @@ interface Props {
 }
 
 export default async function SubcontractorList({ searchParams }: Props) {
-  const clerkUserId = await getServerUserId()
-  if (!clerkUserId) redirect('/auth/sign-in')
-
-  const user = await db.query.users.findFirst({ where: eq(users.clerkUserId, clerkUserId) })
-  if (!user) redirect('/auth/sign-up')
-
+  const user = await requireUser()
   const contractorId = user.contractorId
   const page   = parseInt(searchParams.page ?? '1')
   const limit  = 25
   const offset = (page - 1) * limit
+
+  const contractor = await db.query.contractors.findFirst({
+    where: eq(contractors.id, contractorId),
+  })
 
   const baseWhere = and(
     eq(subcontractors.contractorId, contractorId),
@@ -33,6 +33,15 @@ export default async function SubcontractorList({ searchParams }: Props) {
       ? sql`(${subProfiles.firstName} || ' ' || ${subProfiles.lastName} || ' ' || COALESCE(${subProfiles.companyName}, '')) ILIKE ${`%${searchParams.q}%`}`
       : undefined,
   )
+
+  // Count all active/invited subs for the limit check (not just this page)
+  const [{ totalActive }] = await db
+    .select({ totalActive: sql<number>`count(*)::int` })
+    .from(subcontractors)
+    .where(and(
+      eq(subcontractors.contractorId, contractorId),
+      inArray(subcontractors.status, ['active', 'invited']),
+    ))
 
   const [rows, [{ total }]] = await Promise.all([
     db
@@ -83,6 +92,9 @@ export default async function SubcontractorList({ searchParams }: Props) {
         total={total}
         currentSearch={searchParams.q}
         currentStatus={searchParams.status}
+        currentSubs={totalActive}
+        subLimit={contractor?.subLimit ?? 10}
+        plan={contractor?.plan ?? 'starter'}
       />
 
       {/* Table */}
@@ -128,14 +140,7 @@ export default async function SubcontractorList({ searchParams }: Props) {
                       </div>
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
-                        row.status === 'active'    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                        row.status === 'invited'   ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
-                        row.status === 'suspended' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
-                        'bg-white/10 text-white/60 border-white/20'
-                      }`}>
-                        {row.status}
-                      </span>
+                      <SubStatusBadge status={row.status} />
                     </td>
                     <td className="px-5 py-3.5">
                       {row.riskScore != null
@@ -150,12 +155,22 @@ export default async function SubcontractorList({ searchParams }: Props) {
                       {row.activatedAt ? formatRelative(row.activatedAt) : '—'}
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <Link
-                        href={`/subcontractors/${row.id}`}
-                        className="text-xs font-medium text-accent hover:text-accent-hover"
-                      >
-                        View →
-                      </Link>
+                      <div className="flex items-center justify-end gap-3">
+                        {row.status === 'invited' && row.profile?.ownerEmail && (
+                          <ChaseButton
+                            email={row.profile.ownerEmail}
+                            name={`${row.profile.firstName ?? ''} ${row.profile.lastName ?? ''}`.trim()}
+                            contractorName={contractor?.name ?? ''}
+                            subId={row.id}
+                          />
+                        )}
+                        <Link
+                          href={`/subcontractors/${row.id}`}
+                          className="text-xs font-medium text-accent hover:text-accent-hover"
+                        >
+                          View →
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -163,32 +178,7 @@ export default async function SubcontractorList({ searchParams }: Props) {
             </table>
           </div>
 
-          {/* Pagination */}
-          {total > limit && (
-            <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">
-              <p className="text-xs text-white/50">
-                Showing {offset + 1}–{Math.min(offset + limit, total)} of {total}
-              </p>
-              <div className="flex gap-2">
-                {page > 1 && (
-                  <Link
-                    href={buildQueryString({ ...searchParams, page: String(page - 1) })}
-                    className="px-3 py-1.5 text-xs font-medium border border-white/20 rounded-lg hover:bg-white/10 text-white"
-                  >
-                    Previous
-                  </Link>
-                )}
-                {offset + limit < total && (
-                  <Link
-                    href={buildQueryString({ ...searchParams, page: String(page + 1) })}
-                    className="px-3 py-1.5 text-xs font-medium bg-accent text-[#0A0A0A] rounded-lg hover:bg-accent-hover"
-                  >
-                    Next
-                  </Link>
-                )}
-              </div>
-            </div>
-          )}
+          <Pagination page={page} limit={limit} total={total} searchParams={searchParams} />
         </div>
       )}
     </div>

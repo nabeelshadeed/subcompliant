@@ -12,12 +12,19 @@ export const dynamic = 'force-dynamic'
 
 const schema = z.object({
   action:         z.enum(['approve', 'reject']),
-  reviewNotes:    z.string().optional(),
-  rejectedReason: z.string().optional(),
-  expiresAt:      z.string().optional(), // ISO date YYYY-MM-DD override
-  policyNumber:   z.string().optional(),
-  coverageAmount: z.number().optional(),
-  issuerName:     z.string().optional(),
+  reviewNotes:    z.string().max(1000).optional(),
+  rejectedReason: z.string().max(500).optional(),
+  // expiresAt must be a future date — approving with a past expiry would
+  // immediately mark the document expired, corrupting compliance scores.
+  expiresAt: z.string().optional().refine(val => {
+    if (!val) return true
+    const d = new Date(val)
+    return !isNaN(d.getTime()) && d > new Date()
+  }, 'Expiry date must be a valid future date'),
+  policyNumber:   z.string().max(100).optional(),
+  // coverageAmount must be positive — negative or zero coverage is not valid
+  coverageAmount: z.number().positive('Coverage amount must be greater than zero').optional(),
+  issuerName:     z.string().max(200).optional(),
 })
 
 export async function POST(
@@ -47,6 +54,18 @@ export async function POST(
 
   if (!doc) {
     return NextResponse.json({ error: { code: 'NOT_FOUND' } }, { status: 404 })
+  }
+
+  // Only allow reviewing documents that are currently pending.
+  // Re-approving an already-approved document (e.g. to change expiry) or
+  // approving an expired document without a new upload is a data integrity risk.
+  if (doc.status !== 'pending') {
+    return NextResponse.json({
+      error: {
+        code:    'INVALID_STATE',
+        message: `Document is not pending review (current status: ${doc.status}). Ask the subcontractor to re-upload.`,
+      },
+    }, { status: 409 })
   }
 
   // Verify contractor has access to this profile

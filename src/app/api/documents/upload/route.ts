@@ -4,7 +4,7 @@ import {
   complianceDocuments, subProfiles, uploadSessions,
   subcontractors, documentAccess, documentTypes
 } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, isNull } from 'drizzle-orm'
 import { uploadToR2, generateDocKey, hashBuffer } from '@/lib/r2'
 import { enqueueJob, rateLimit } from '@/lib/redis'
 import { getAuthContext, logAudit } from '@/lib/auth/get-auth'
@@ -66,8 +66,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: { code: 'SESSION_INVALID', message: 'Invalid or expired upload link' } }, { status: 401 })
     }
 
-    if (session.isSingleUse && session.usedAt) {
-      return NextResponse.json({ error: { code: 'LINK_USED', message: 'This upload link has already been used.' } }, { status: 410 })
+    // Atomically claim the session to prevent race conditions on single-use links.
+    // Two concurrent requests with the same token will both hit this UPDATE, but
+    // only the first will get a row returned (WHERE usedAt IS NULL). The second
+    // gets an empty result and is rejected. This replaces the non-atomic
+    // read-then-check pattern (session.isSingleUse && session.usedAt).
+    if (session.isSingleUse) {
+      const [claimed] = await db
+        .update(uploadSessions)
+        .set({ usedAt: new Date() })
+        .where(and(
+          eq(uploadSessions.id, session.id),
+          isNull(uploadSessions.usedAt),
+        ))
+        .returning()
+
+      if (!claimed) {
+        return NextResponse.json({ error: { code: 'LINK_USED', message: 'This upload link has already been used.' } }, { status: 410 })
+      }
     }
 
     contractorId = session.contractorId
@@ -95,8 +111,20 @@ export async function POST(req: NextRequest) {
 
     profileId = profile.id
 
-    // Ensure subcontractor relationship exists for this contractor/profile pair
-    let sub = await db.query.subcontractors.findFirst({
+    // Ensure subcontractor relationship exists for this contractor/profile pair.
+    // Use INSERT ... ON CONFLICT DO NOTHING to prevent duplicate rows from
+    // concurrent uploads (race condition between findFirst and insert).
+    // We rely on the unique index on (contractor_id, profile_id, deleted_at IS NULL).
+    await db.insert(subcontractors).values({
+      contractorId,
+      profileId,
+      status:      'active',
+      invitedAt:   session.createdAt,
+      activatedAt: new Date(),
+    }).onConflictDoNothing()
+
+    // Re-fetch to get the canonical record (whether newly created or pre-existing)
+    const sub = await db.query.subcontractors.findFirst({
       where: and(
         eq(subcontractors.contractorId, contractorId),
         eq(subcontractors.profileId, profileId),
@@ -104,20 +132,20 @@ export async function POST(req: NextRequest) {
     })
 
     if (!sub) {
-      const [createdSub] = await db.insert(subcontractors).values({
-        contractorId,
-        profileId,
-        status:      'active',
-        invitedAt:   session.createdAt,
-        activatedAt: new Date(),
-      }).returning()
-      sub = createdSub
+      return NextResponse.json({ error: { code: 'SUB_CREATE_FAILED', message: 'Could not link subcontractor profile' } }, { status: 500 })
     }
 
-    // Mark session used (idempotent)
-    await db.update(uploadSessions)
-      .set({ subcontractorId: sub.id, usedAt: new Date() })
-      .where(eq(uploadSessions.id, session.id))
+    // Update session with resolved subcontractor (non-single-use sessions aren't
+    // claimed above, so we update them here; single-use sessions were already claimed)
+    if (!session.isSingleUse) {
+      await db.update(uploadSessions)
+        .set({ subcontractorId: sub.id })
+        .where(eq(uploadSessions.id, session.id))
+    } else {
+      await db.update(uploadSessions)
+        .set({ subcontractorId: sub.id })
+        .where(eq(uploadSessions.id, session.id))
+    }
 
   } else {
     // ── Authenticated mode (Clerk) ──────────────────────────────────────────
@@ -198,30 +226,9 @@ export async function POST(req: NextRequest) {
 
   const fileHash = await hashBuffer(buffer)
 
-  // Check for exact duplicate (same hash, same profile, same type)
-  const existing = await db.query.complianceDocuments.findFirst({
-    where: and(
-      eq(complianceDocuments.profileId, profileId),
-      eq(complianceDocuments.documentTypeId, docTypeId),
-      eq(complianceDocuments.fileHash, fileHash),
-      eq(complianceDocuments.isCurrent, true),
-    )
-  })
-
-  if (existing) {
-    return NextResponse.json({ error: { code: 'DUPLICATE_FILE', message: 'Identical document already uploaded' } }, { status: 409 })
-  }
-
-  // Mark any existing document of this type as superseded
-  await db.update(complianceDocuments)
-    .set({ isCurrent: false, status: 'superseded' })
-    .where(and(
-      eq(complianceDocuments.profileId, profileId),
-      eq(complianceDocuments.documentTypeId, docTypeId),
-      eq(complianceDocuments.isCurrent, true),
-    ))
-
-  // Upload to R2
+  // Upload to R2 before the transaction so we don't hold a DB lock during I/O.
+  // The file key is deterministic; if the transaction rolls back the orphaned R2
+  // object is harmless (no DB record points to it).
   const fileKey = generateDocKey(profileId, docType.slug, file.name)
   await uploadToR2(fileKey, buffer, file.type, {
     profileId,
@@ -229,17 +236,54 @@ export async function POST(req: NextRequest) {
     originalName:   file.name,
   })
 
-  // Insert document record
-  const [doc] = await db.insert(complianceDocuments).values({
-    profileId,
-    documentTypeId: docTypeId,
-    status:         'pending',
-    fileKey,
-    fileName:       file.name,
-    fileSizeBytes:  file.size,
-    mimeType:       file.type,
-    fileHash,
-  }).returning()
+  // Atomic duplicate-check + supersede + insert in a single transaction.
+  // Without the transaction, two concurrent uploads of the same file can both
+  // pass the duplicate check and both be inserted (TOCTOU race condition).
+  let doc: typeof complianceDocuments.$inferSelect
+  try {
+    doc = await db.transaction(async (tx) => {
+      // Check for exact duplicate inside the transaction
+      const existing = await tx.query.complianceDocuments.findFirst({
+        where: and(
+          eq(complianceDocuments.profileId, profileId),
+          eq(complianceDocuments.documentTypeId, docTypeId),
+          eq(complianceDocuments.fileHash, fileHash),
+          eq(complianceDocuments.isCurrent, true),
+        ),
+      })
+
+      if (existing) {
+        throw Object.assign(new Error('DUPLICATE_FILE'), { code: 'DUPLICATE_FILE' })
+      }
+
+      // Atomically mark previous version(s) superseded
+      await tx.update(complianceDocuments)
+        .set({ isCurrent: false, status: 'superseded' })
+        .where(and(
+          eq(complianceDocuments.profileId, profileId),
+          eq(complianceDocuments.documentTypeId, docTypeId),
+          eq(complianceDocuments.isCurrent, true),
+        ))
+
+      const [newDoc] = await tx.insert(complianceDocuments).values({
+        profileId,
+        documentTypeId: docTypeId,
+        status:         'pending',
+        fileKey,
+        fileName:       file.name,
+        fileSizeBytes:  file.size,
+        mimeType:       file.type,
+        fileHash,
+      }).returning()
+
+      return newDoc
+    })
+  } catch (err: any) {
+    if (err?.code === 'DUPLICATE_FILE') {
+      return NextResponse.json({ error: { code: 'DUPLICATE_FILE', message: 'Identical document already uploaded' } }, { status: 409 })
+    }
+    throw err
+  }
 
   // Grant document access to the contractor
   await db.insert(documentAccess).values({
