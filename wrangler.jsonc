@@ -19,7 +19,7 @@
   },
   // Public env vars baked into the Worker at deploy time (not secrets).
   "vars": {
-    "NEXT_PUBLIC_APP_URL": "https://subcompliant.skypathwayz.workers.dev"
+    "NEXT_PUBLIC_APP_URL": "https://subcompliant.com"
   },
   // Cron trigger — runs expiry-reminder job at 08:00 UTC every day.
   "triggers": {
