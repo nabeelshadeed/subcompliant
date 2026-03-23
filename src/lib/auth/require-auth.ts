@@ -6,7 +6,11 @@ import { eq } from 'drizzle-orm'
 
 /**
  * Fetch the authenticated DB user from server components / pages.
- * Redirects to sign-in if unauthenticated, sign-up if no DB record.
+ * Redirects to sign-in if unauthenticated, /setup if no DB record yet
+ * (webhook may still be in-flight — /setup auto-retries).
+ * Never redirects to /auth/sign-up for an already-authenticated user:
+ * Clerk's <SignUp> component throws a Server Component error when rendered
+ * for a user who is already signed in.
  */
 export async function requireUser() {
   const clerkUserId = await getServerUserId()
@@ -16,7 +20,7 @@ export async function requireUser() {
     where: eq(users.clerkUserId, clerkUserId),
     with:  { contractor: true },
   })
-  if (!user) redirect('/auth/sign-up')
+  if (!user) redirect('/setup')
 
   return user
 }
