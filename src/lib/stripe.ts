@@ -60,7 +60,7 @@ export async function createCheckoutSession(params: {
     cancel_url:  params.cancelUrl,
     metadata:   { contractorId: params.contractorId },
     subscription_data: {
-      trial_period_days: 14,
+      trial_period_days: 7,
       metadata:          { contractorId: params.contractorId },
     },
   })

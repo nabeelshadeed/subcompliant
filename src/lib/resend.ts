@@ -247,7 +247,7 @@ export async function sendWelcomeEmail(params: {
               Go to Dashboard →
             </a>
           </div>
-          <p style="color:#6b7280;font-size:13px">Your 14-day free trial includes full Pro features. No credit card needed.</p>
+          <p style="color:#6b7280;font-size:13px">Your 7-day free trial gives you full access. A card is required to activate your trial — cancel before day 7 and you won't be charged.</p>
           <p style="color:#6b7280;font-size:13px">Any questions? Reply to this email — we reply within 4 hours Mon–Fri.</p>
         </div>
       </div>

@@ -21,7 +21,7 @@ export default function PricingContent() {
         <div className="container">
           <div className="eyebrow"><span className="eyebrow-dot" />Pricing</div>
           <h1 className="sh">Simple pricing for every<br />UK contractor.</h1>
-          <p className="sl">14-day free trial on all plans. No credit card required. Cancel anytime.</p>
+          <p className="sl">7-day free trial on all plans. Card required to activate. Cancel anytime.</p>
           <div className="pricing-trust">
             <span className="ptrust-badge">✓ No long-term contracts</span>
             <span className="ptrust-badge">✓ UK GDPR compliant</span>
@@ -49,7 +49,7 @@ export default function PricingContent() {
               <div className="price-tier">Starter</div>
               <div className="price-val"><sup>£</sup>{prices[0]}<sub>{suffix}</sub></div>
               {billing === 'a' && <div style={{ fontSize: 11, color: 'var(--acc)', marginBottom: 4, fontWeight: 600 }}>Save {annualSavings[0]}/yr</div>}
-              <div style={{ fontSize: 11, color: 'var(--w55)', marginBottom: 10, background: 'rgba(204,255,0,.07)', border: '1px solid rgba(204,255,0,.15)', borderRadius: 100, padding: '3px 10px', display: 'inline-block' }}>14-day free trial — no credit card</div>
+              <div style={{ fontSize: 11, color: 'var(--w55)', marginBottom: 10, background: 'rgba(204,255,0,.07)', border: '1px solid rgba(204,255,0,.15)', borderRadius: 100, padding: '3px 10px', display: 'inline-block' }}>7-day free trial — card required</div>
               <div className="price-desc">For sole traders managing up to 10 subcontractors.</div>
               <ul className="price-feats">
                 <li className="price-feat">Up to 10 subcontractors</li>
@@ -67,7 +67,7 @@ export default function PricingContent() {
               <div className="price-tier">Pro</div>
               <div className="price-val"><sup>£</sup>{prices[1]}<sub>{suffix}</sub></div>
               {billing === 'a' && <div style={{ fontSize: 11, color: 'var(--acc)', marginBottom: 4, fontWeight: 600 }}>Save {annualSavings[1]}/yr</div>}
-              <div style={{ fontSize: 11, color: 'var(--w55)', marginBottom: 10, background: 'rgba(204,255,0,.07)', border: '1px solid rgba(204,255,0,.15)', borderRadius: 100, padding: '3px 10px', display: 'inline-block' }}>14-day free trial — no credit card</div>
+              <div style={{ fontSize: 11, color: 'var(--w55)', marginBottom: 10, background: 'rgba(204,255,0,.07)', border: '1px solid rgba(204,255,0,.15)', borderRadius: 100, padding: '3px 10px', display: 'inline-block' }}>7-day free trial — card required</div>
               <div className="price-desc">For growing contractors managing multiple sites.</div>
               <div style={{ fontSize: 12, color: 'var(--acc)', fontWeight: 600, marginBottom: 10 }}>Most value for growing contractors</div>
               <ul className="price-feats">
@@ -85,7 +85,7 @@ export default function PricingContent() {
               <div className="price-tier">Business</div>
               <div className="price-val"><sup>£</sup>{prices[2]}<sub>{suffix}</sub></div>
               {billing === 'a' && <div style={{ fontSize: 11, color: 'var(--acc)', marginBottom: 4, fontWeight: 600 }}>Save {annualSavings[2]}/yr</div>}
-              <div style={{ fontSize: 11, color: 'var(--w55)', marginBottom: 10, background: 'rgba(204,255,0,.07)', border: '1px solid rgba(204,255,0,.15)', borderRadius: 100, padding: '3px 10px', display: 'inline-block' }}>14-day free trial — no credit card</div>
+              <div style={{ fontSize: 11, color: 'var(--w55)', marginBottom: 10, background: 'rgba(204,255,0,.07)', border: '1px solid rgba(204,255,0,.15)', borderRadius: 100, padding: '3px 10px', display: 'inline-block' }}>7-day free trial — card required</div>
               <div className="price-desc">For established contractors with large supply chains.</div>
               <ul className="price-feats">
                 <li className="price-feat">Up to 250 subcontractors</li>
@@ -99,7 +99,7 @@ export default function PricingContent() {
             <article className="price-card">
               <div className="price-tier">Enterprise</div>
               <div className="price-val" style={{ fontSize: 28, letterSpacing: '-.5px' }}>Custom<sub style={{ fontSize: 12 }}> pricing</sub></div>
-              <div style={{ fontSize: 11, color: 'var(--w55)', marginBottom: 10, background: 'rgba(204,255,0,.07)', border: '1px solid rgba(204,255,0,.15)', borderRadius: 100, padding: '3px 10px', display: 'inline-block' }}>14-day free trial — no credit card</div>
+              <div style={{ fontSize: 11, color: 'var(--w55)', marginBottom: 10, background: 'rgba(204,255,0,.07)', border: '1px solid rgba(204,255,0,.15)', borderRadius: 100, padding: '3px 10px', display: 'inline-block' }}>7-day free trial — card required</div>
               <div className="price-desc">National contractors with complex compliance needs.</div>
               <ul className="price-feats">
                 <li className="price-feat">Unlimited subcontractors</li>

@@ -301,7 +301,7 @@ export default async function HomePage() {
           <div className="container">
             <div className="eyebrow" style={{ justifyContent: 'center' }}><span className="eyebrow-dot" />Pricing</div>
             <h2 id="price-h" className="sh" style={{ margin: '0 auto 10px', textAlign: 'center' as const }}>Simple pricing. No surprises.</h2>
-            <p className="sl" style={{ margin: '0 auto 36px', textAlign: 'center' as const }}>14-day free trial on all plans. No credit card required. Cancel anytime.</p>
+            <p className="sl" style={{ margin: '0 auto 36px', textAlign: 'center' as const }}>7-day free trial on all plans. Card required to activate. Cancel anytime.</p>
             <div className="price-grid">
               <article className="price-card">
                 <div className="price-tier">Starter</div>

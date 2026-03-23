@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
         slug,
         plan:       'starter',
         subLimit:   10,
-        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14-day trial
+        trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7-day trial
       }).onConflictDoNothing()
       break
     }

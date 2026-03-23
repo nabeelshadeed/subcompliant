@@ -230,7 +230,7 @@ export default function BillingClient({ currentSubs = 0, subLimit = 10, plan = '
       </div>
 
       <p className="text-xs text-white/50">
-        All plans include a 14-day free trial. No credit card required to start.
+        All plans include a 7-day free trial. Card required to activate trial.
         Prices shown exclude VAT. Cancel any time.
       </p>
     </div>

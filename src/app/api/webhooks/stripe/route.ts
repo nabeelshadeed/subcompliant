@@ -41,6 +41,43 @@ export async function POST(req: NextRequest) {
   const data = event.data.object as any
 
   switch (event.type) {
+    // Fired when a subscription is first created (e.g. after checkout with a trial).
+    // checkout.session.completed fires first and handles the initial activation;
+    // this handler covers subscriptions created via the API or portal without checkout.
+    case 'customer.subscription.created': {
+      const sub        = data as Stripe.Subscription
+      const customerId = sub.customer as string
+      const priceId    = sub.items.data[0]?.price?.id ?? ''
+      const planKey    = planFromPriceId(priceId) ?? 'starter'
+      const subLimit   = PLAN_LIMITS[planKey] ?? 10
+      const active     = sub.status === 'active' || sub.status === 'trialing'
+      const contractorId = sub.metadata?.contractorId
+
+      if (contractorId) {
+        await db.update(contractors)
+          .set({
+            plan:          planKey as any,
+            stripeSubId:   sub.id,
+            subLimit,
+            planExpiresAt: new Date((sub.current_period_end ?? 0) * 1000),
+            isActive:      active,
+          })
+          .where(eq(contractors.id, contractorId))
+      } else {
+        // Fall back to matching by customer ID if metadata missing
+        await db.update(contractors)
+          .set({
+            plan:          planKey as any,
+            stripeSubId:   sub.id,
+            subLimit,
+            planExpiresAt: new Date((sub.current_period_end ?? 0) * 1000),
+            isActive:      active,
+          })
+          .where(eq(contractors.stripeCustomerId, customerId))
+      }
+      break
+    }
+
     case 'checkout.session.completed': {
       const contractorId = data.metadata?.contractorId
       if (contractorId && data.subscription) {

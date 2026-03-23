@@ -10,8 +10,10 @@ import { currentUser } from '@clerk/nextjs/server'
 export const dynamic = 'force-dynamic'
 
 const schema = z.object({
-  planKey: z.enum(['starter', 'pro', 'business']),
-  billing: z.enum(['monthly', 'annual']),
+  planKey:     z.enum(['starter', 'pro', 'business']),
+  billing:     z.enum(['monthly', 'annual']),
+  successPath: z.string().optional(),
+  cancelPath:  z.string().optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -47,12 +49,16 @@ export async function POST(req: NextRequest) {
   const plan    = PLANS[parsed.data.planKey]
   const priceId = parsed.data.billing === 'annual' ? plan.annual : plan.monthly
 
+  const appUrl     = process.env.NEXT_PUBLIC_APP_URL ?? 'https://subcompliant.com'
+  const successUrl = `${appUrl}${parsed.data.successPath ?? '/settings/billing?success=1'}`
+  const cancelUrl  = `${appUrl}${parsed.data.cancelPath  ?? '/settings/billing?cancelled=1'}`
+
   const session = await createCheckoutSession({
     customerId,
     priceId,
     contractorId: ctx.contractorId,
-    successUrl:   `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?success=1`,
-    cancelUrl:    `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?cancelled=1`,
+    successUrl,
+    cancelUrl,
   })
 
   return NextResponse.json({ url: session.url })
