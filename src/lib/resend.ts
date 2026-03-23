@@ -4,7 +4,7 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY!)
 }
 
-const FROM = () => `${process.env.EMAIL_FROM_NAME ?? 'SubCompliant'} <${process.env.EMAIL_FROM ?? 'noreply@subcompliant.co.uk'}>`
+const FROM = () => `${process.env.EMAIL_FROM_NAME ?? 'SubCompliant'} <${process.env.EMAIL_FROM ?? 'noreply@subcompliant.com'}>`
 
 export async function sendMagicLinkInvite(params: {
   to:             string

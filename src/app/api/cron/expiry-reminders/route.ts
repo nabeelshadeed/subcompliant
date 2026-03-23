@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
 
     if (alreadySent) { skipped++; continue }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://subcompliant.com'
     let uploadLink = `${appUrl}/upload`
     try {
       const token = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(48))).toString('base64url')
@@ -209,7 +209,7 @@ export async function GET(req: NextRequest) {
       ),
     ))
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://subcompliant.co.uk'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://subcompliant.com'
 
   for (const c of trialContractors) {
     if (!c.trialEndsAt) continue

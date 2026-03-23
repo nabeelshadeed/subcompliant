@@ -17,7 +17,7 @@ const dmSans = DM_Sans({
   display: 'swap',
 })
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://subcompliant.co.uk'
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://subcompliant.com'
 
 export const metadata: Metadata = {
   title:       { template: '%s | SubCompliant', default: 'SubCompliant — Subcontractor Compliance' },

@@ -6,7 +6,7 @@ export default defineCloudflareConfig({
   // without requiring the CRON_SECRET auth header.
   scheduled: {
     async handler(event, env) {
-      const appUrl = (env as any).NEXT_PUBLIC_APP_URL ?? "https://subcompliant.skypathwayz.workers.dev";
+      const appUrl = (env as any).NEXT_PUBLIC_APP_URL ?? "https://subcompliant.com";
       try {
         await fetch(`${appUrl}/api/cron/expiry-reminders`, {
           headers: { "x-cf-worker": "1" },

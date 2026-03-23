@@ -88,9 +88,10 @@ export async function POST(req: NextRequest) {
 
     contractorId = session.contractorId
 
-    // Get or create sub profile from session info
-    const subEmail = req.headers.get('x-sub-email') ?? session.subEmail
-    const subName  = req.headers.get('x-sub-name')  ?? session.subName ?? 'Unknown'
+    // Use only session-stored values for email/name — never trust client-supplied
+    // headers for identity in magic-link mode (injection vulnerability).
+    const subEmail = session.subEmail
+    const subName  = session.subName ?? 'Unknown'
     const [firstName, ...rest] = (subName).split(' ')
 
     let profile = await db.query.subProfiles.findFirst({
@@ -104,7 +105,7 @@ export async function POST(req: NextRequest) {
         ownerEmail: subEmail!,
         firstName:  firstName ?? subName,
         lastName:   rest.join(' ') || '—',
-        companyName: req.headers.get('x-sub-company') ?? undefined,
+        companyName: undefined,
       }).returning()
       profile = created
     }

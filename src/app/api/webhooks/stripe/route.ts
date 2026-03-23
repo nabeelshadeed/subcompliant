@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { planFromPriceId, constructWebhookEvent } from '@/lib/stripe'
 import { db } from '@/lib/db'
-import { contractors } from '@/lib/db/schema'
+import { contractors, notifications } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { cacheGet, cacheSet } from '@/lib/redis'
 
@@ -86,6 +86,41 @@ export async function POST(req: NextRequest) {
       const sub = data as Stripe.Subscription
       await db.update(contractors)
         .set({ plan: 'starter', subLimit: 10, stripeSubId: null, isActive: true })
+        .where(eq(contractors.stripeCustomerId, sub.customer as string))
+      break
+    }
+
+    // Payment failed — mark account as inactive so they can't add subs, and
+    // create an in-app notification. Stripe will retry and send its own email.
+    case 'invoice.payment_failed': {
+      const invoice    = data as Stripe.Invoice
+      const customerId = invoice.customer as string
+      const contractor = await db.query.contractors.findFirst({
+        where: eq(contractors.stripeCustomerId, customerId),
+      })
+      if (contractor) {
+        await db.update(contractors)
+          .set({ isActive: false })
+          .where(eq(contractors.id, contractor.id))
+        await db.insert(notifications).values({
+          contractorId:   contractor.id,
+          eventType:      'payment_failed',
+          severity:       'critical',
+          channel:        'in_app',
+          status:         'sent',
+          subject:        'Payment failed — please update your billing details',
+          body:           'Your last payment failed. Update your card in Settings → Billing to restore full access.',
+          sentAt:         new Date(),
+        }).catch(() => {})
+      }
+      break
+    }
+
+    // Subscription paused (e.g. payment grace period exhausted on some plans)
+    case 'customer.subscription.paused': {
+      const sub = data as Stripe.Subscription
+      await db.update(contractors)
+        .set({ isActive: false })
         .where(eq(contractors.stripeCustomerId, sub.customer as string))
       break
     }

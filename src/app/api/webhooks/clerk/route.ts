@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
 
         // Send welcome email to org admins only (the account owner)
         if (isAdmin && email) {
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://subcompliant.co.uk'
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://subcompliant.com'
           await sendWelcomeEmail({
             to:             email,
             firstName:      firstName || 'there',
@@ -138,8 +138,38 @@ export async function POST(req: NextRequest) {
       break
     }
 
+    // Sync org name changes to contractor record
+    case 'organization.updated': {
+      await db.update(contractors)
+        .set({ name: data.name })
+        .where(eq(contractors.clerkOrgId, data.id))
+      break
+    }
+
+    // Deactivate user when removed from org
+    case 'organizationMembership.deleted': {
+      const clerkUserId = data.public_user_data?.user_id
+      if (clerkUserId) {
+        await db.update(users)
+          .set({ isActive: false })
+          .where(eq(users.clerkUserId, clerkUserId))
+      }
+      break
+    }
+
+    // Sync role changes (e.g. viewer promoted to admin)
+    case 'organizationMembership.updated': {
+      const clerkUserId = data.public_user_data?.user_id
+      const newRole = data.role === 'org:admin' ? 'admin' : 'viewer'
+      if (clerkUserId) {
+        await db.update(users)
+          .set({ role: newRole })
+          .where(eq(users.clerkUserId, clerkUserId))
+      }
+      break
+    }
+
     default:
-      // Ignore unhandled events
       break
   }
 

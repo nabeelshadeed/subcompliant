@@ -9,6 +9,13 @@ const REQUIRED_ENV_VARS = [
   'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
   'STRIPE_SECRET_KEY',
   'STRIPE_WEBHOOK_SECRET',
+  // Stripe price IDs — billing silently breaks without these
+  'STRIPE_PRICE_STARTER_MONTHLY',
+  'STRIPE_PRICE_STARTER_ANNUAL',
+  'STRIPE_PRICE_PRO_MONTHLY',
+  'STRIPE_PRICE_PRO_ANNUAL',
+  'STRIPE_PRICE_BUSINESS_MONTHLY',
+  'STRIPE_PRICE_BUSINESS_ANNUAL',
   'RESEND_API_KEY',
   'R2_ACCOUNT_ID',
   'R2_ACCESS_KEY_ID',
@@ -17,6 +24,7 @@ const REQUIRED_ENV_VARS = [
   'UPSTASH_REDIS_REST_URL',
   'UPSTASH_REDIS_REST_TOKEN',
   'CRON_SECRET',
+  'NEXT_PUBLIC_APP_URL',
 ] as const
 
 // Only validate at runtime, not during `next build`. During the build phase
