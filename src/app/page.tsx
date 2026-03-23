@@ -69,7 +69,7 @@ export default async function HomePage() {
                 <br />can <em>void everything.</em>
               </h1>
               <p className="hero-sub">
-                SubCompliant automatically collects, verifies, and tracks every subcontractor&apos;s compliance documents — with real-time risk scoring, live certification checks, and one-click HSE audit reports.
+                SubCompliant automatically collects and tracks every subcontractor&apos;s compliance documents — with real-time risk scoring, automated expiry alerts, and one-click HSE audit reports.
               </p>
               <div className="hero-ctas">
                 <Link href="/auth/sign-up" className="btn btn-acc btn-lg">Start Free — 14 Days →</Link>
@@ -113,7 +113,7 @@ export default async function HomePage() {
             <div className="proof-inner">
               <div className="proof-item"><span className="proof-ico">🔒</span><span>GDPR Compliant</span></div>
               <div className="proof-item"><span className="proof-ico">✅</span><span><strong className="proof-strong">HSE</strong> audit-ready reports</span></div>
-              <div className="proof-item"><span className="proof-ico">🔍</span><span><strong className="proof-strong">Live</strong> CSCS · Gas Safe · NICEIC verification</span></div>
+              <div className="proof-item"><span className="proof-ico">📋</span><span><strong className="proof-strong">All</strong> UK compliance doc types supported</span></div>
               <div className="proof-item"><span className="proof-ico">⚡</span><span>Live in <strong className="proof-strong">under 10 minutes</strong></span></div>
               <div className="proof-item"><span className="proof-ico">🏗️</span><span>Built for <strong className="proof-strong">UK SME contractors</strong></span></div>
             </div>
@@ -185,9 +185,9 @@ export default async function HomePage() {
                 <p>Generate a PDF compliance report in one click — formatted for HSE site audits. Shows document status, expiry dates, and approval history for your entire supply chain.</p>
               </div>
               <div className="feat-card rv d2">
-                <div className="feat-ico">✅</div>
-                <h3>Live Verification</h3>
-                <p>CSCS, Gas Safe, and NICEIC registrations verified directly against official databases. Know immediately if a card is genuine, expired, or suspended.</p>
+                <div className="feat-ico">🔔</div>
+                <h3>Automated Expiry Chasing</h3>
+                <p>When a document is nearing expiry, SubCompliant automatically sends a fresh magic-link to the subcontractor so they can re-upload — no manual chasing on your end.</p>
               </div>
               <div className="feat-card rv">
                 <div className="feat-ico">🏗️</div>
@@ -343,7 +343,7 @@ export default async function HomePage() {
                 <ul className="price-feats">
                   <li className="price-feat">250 subcontractors</li>
                   <li className="price-feat">Everything in Pro</li>
-                  <li className="price-feat">CSCS / Gas Safe / NICEIC verification</li>
+                  <li className="price-feat">Custom document type templates</li>
                   <li className="price-feat">API access &amp; webhooks</li>
                   <li className="price-feat">Audit logs</li>
                   <li className="price-feat">Priority support</li>
