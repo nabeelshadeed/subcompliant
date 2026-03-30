@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { uploadSessions, documentTypes } from '@/lib/db/schema'
 import { eq, inArray } from 'drizzle-orm'
+import { ensureBuiltinDocTypes } from '@/lib/seed-doc-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,6 +10,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  try {
   const { token } = await params
   const session = await db.query.uploadSessions.findFirst({
     where: eq(uploadSessions.token, token),
@@ -26,6 +28,10 @@ export async function GET(
   if (session.completedAt) {
     return NextResponse.json({ error: { code: 'SESSION_COMPLETED', message: 'Documents already submitted' } }, { status: 409 })
   }
+
+  // Ensure built-in doc types are seeded — this is the first touch point for
+  // many subcontractors so we guarantee the table is populated before querying.
+  await ensureBuiltinDocTypes()
 
   // Resolve required document types
   let requiredDocTypes: any[] = []
@@ -58,4 +64,11 @@ export async function GET(
       defaultExpiryMonths:  t.defaultExpiryMonths,
     })),
   })
+  } catch (err) {
+    console.error('[upload-session:GET] unhandled error:', err)
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Could not load upload session. Please try again.' } },
+      { status: 500 }
+    )
+  }
 }

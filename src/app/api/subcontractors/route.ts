@@ -11,13 +11,14 @@ import { addHours } from 'date-fns'
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
+  try {
   const { ctx, error } = await getAuthContext(req)
   if (error) return error
 
   const search = req.nextUrl.searchParams.get('q')
   const status = req.nextUrl.searchParams.get('status')
-  const page   = parseInt(req.nextUrl.searchParams.get('page') ?? '1')
-  const limit  = Math.min(parseInt(req.nextUrl.searchParams.get('limit') ?? '25'), 100)
+  const page   = Math.max(1, parseInt(req.nextUrl.searchParams.get('page')  ?? '1',  10) || 1)
+  const limit  = Math.min(Math.max(1, parseInt(req.nextUrl.searchParams.get('limit') ?? '25', 10) || 25), 100)
   const offset = (page - 1) * limit
 
   const subs = await db
@@ -69,6 +70,13 @@ export async function GET(req: NextRequest) {
     data: subs,
     meta: { total: count, page, limit, pages: Math.ceil(count / limit) },
   })
+  } catch (err) {
+    console.error('[subcontractors:GET] unhandled error:', err)
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred.' } },
+      { status: 500 }
+    )
+  }
 }
 
 const inviteSchema = z.object({
@@ -82,34 +90,46 @@ const inviteSchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  try {
   const { ctx, error } = await getAuthContext(req)
   if (error) return error
 
   const adminError = requireAdmin(ctx)
   if (adminError) return adminError
 
-  const rl = await rateLimit(`magic-link:${ctx.contractorId}`, 50, 3600)
-  if (!rl.allowed) {
-    return NextResponse.json(
-      { error: { code: 'RATE_LIMITED', message: 'Too many invites sent. Try again in an hour.' } },
-      { status: 429 }
-    )
+  try {
+    const rl = await rateLimit(`magic-link:${ctx.contractorId}`, 50, 3600)
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: { code: 'RATE_LIMITED', message: 'Too many invites sent. Try again in an hour.' } },
+        { status: 429 }
+      )
+    }
+  } catch {
+    // Redis unavailable — allow invite without rate limiting
   }
 
-  // Check plan sub limit
-  const [{ count: activeSubs }] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(subcontractors)
-    .where(and(
-      eq(subcontractors.contractorId, ctx.contractorId),
-      inArray(subcontractors.status, ['active', 'invited']),
-      isNull(subcontractors.deletedAt),
-    ))
+  // Check plan sub limit — skip enforcement during active trial so new users
+  // can import their full supply chain before deciding on a plan
+  const inActiveTrial = ctx.contractor.trialEndsAt
+    ? new Date() < new Date(ctx.contractor.trialEndsAt)
+    : false
 
-  if (activeSubs >= ctx.contractor.subLimit) {
-    return NextResponse.json({
-      error: { code: 'PLAN_LIMIT_REACHED', message: `Your plan allows ${ctx.contractor.subLimit} subcontractors. Upgrade to add more.` }
-    }, { status: 402 })
+  if (!inActiveTrial) {
+    const [{ count: activeSubs }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(subcontractors)
+      .where(and(
+        eq(subcontractors.contractorId, ctx.contractorId),
+        inArray(subcontractors.status, ['active', 'invited']),
+        isNull(subcontractors.deletedAt),
+      ))
+
+    if (activeSubs >= ctx.contractor.subLimit) {
+      return NextResponse.json({
+        error: { code: 'PLAN_LIMIT_REACHED', message: `Your plan allows ${ctx.contractor.subLimit} subcontractors. Upgrade to add more.` }
+      }, { status: 402 })
+    }
   }
 
   const body   = await req.json().catch(() => null)
@@ -151,20 +171,36 @@ export async function POST(req: NextRequest) {
     expiresAt,
     subEmail:           data.email,
     subName:            data.name,
-    isSingleUse:        true,
+    isSingleUse:        false,
   }).returning()
 
   const magicLink = `${process.env.NEXT_PUBLIC_APP_URL}/upload?t=${token}`
 
-  await sendMagicLinkInvite({
-    to:             data.email,
-    subName:        data.name ?? 'there',
-    contractorName: ctx.contractor.name,
-    magicLink,
-    customMessage:  data.customMessage,
-    expiresAt,
-    requiredDocs:   docTypeNames,
-  })
+  try {
+    await sendMagicLinkInvite({
+      to:             data.email,
+      subName:        data.name ?? 'there',
+      contractorName: ctx.contractor.name,
+      magicLink,
+      customMessage:  data.customMessage,
+      expiresAt,
+      requiredDocs:   docTypeNames,
+    })
+  } catch (emailErr) {
+    // Email failed — session is created, log for manual follow-up
+    console.error('[subcontractors:POST] invite email failed:', emailErr, { sessionId: session.id, to: data.email })
+    return NextResponse.json(
+      { error: { code: 'EMAIL_SEND_FAILED', message: 'Invitation created but email could not be sent. Please copy and share the link manually.', magicLink } },
+      { status: 502 }
+    )
+  }
 
   return NextResponse.json({ sessionId: session.id, magicLink, expiresAt: expiresAt.toISOString() }, { status: 201 })
+  } catch (err) {
+    console.error('[subcontractors:POST] unhandled error:', err)
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred.' } },
+      { status: 500 }
+    )
+  }
 }
