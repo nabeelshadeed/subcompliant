@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { uploadSessions, documentTypes } from '@/lib/db/schema'
-import { inArray } from 'drizzle-orm'
+import { uploadSessions } from '@/lib/db/schema'
 import { getAuthContext, requireAdmin } from '@/lib/auth/get-auth'
 import { sendMagicLinkInvite } from '@/lib/resend'
 import { rateLimit } from '@/lib/redis'
 import { addHours } from 'date-fns'
+import { upsertDocTypesBySlug } from '@/lib/seed-doc-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,18 +21,23 @@ const schema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  try {
   const { ctx, error } = await getAuthContext(req)
   if (error) return error
 
   const adminError = requireAdmin(ctx)
   if (adminError) return adminError
 
-  const rl = await rateLimit(`magic-link:${ctx.contractorId}`, 50, 3600)
-  if (!rl.allowed) {
-    return NextResponse.json(
-      { error: { code: 'RATE_LIMITED', message: 'Too many invites sent. Try again in an hour.' } },
-      { status: 429 }
-    )
+  try {
+    const rl = await rateLimit(`magic-link:${ctx.contractorId}`, 50, 3600)
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: { code: 'RATE_LIMITED', message: 'Too many invites sent. Try again in an hour.' } },
+        { status: 429 }
+      )
+    }
+  } catch {
+    // Redis unavailable — allow invite without rate limiting
   }
 
   const body   = await req.json().catch(() => null)
@@ -43,23 +48,14 @@ export async function POST(req: NextRequest) {
 
   const data = parsed.data
 
-  // Resolve document type IDs
+  // Resolve document type IDs — auto-create any missing built-in types on first use
   let docTypeIds: string[] | undefined
   let docTypeNames: string[] = ['All required compliance documents']
 
   if (data.requiredDocTypeSlugs?.length) {
-    const types = await db.query.documentTypes.findMany({
-      where: inArray(documentTypes.slug, data.requiredDocTypeSlugs),
-    })
-    const missingSlugs = data.requiredDocTypeSlugs.filter(s => !types.some(t => t.slug === s))
-    if (missingSlugs.length > 0) {
-      return NextResponse.json(
-        { error: { code: 'INVALID_DOC_TYPES', message: `Unknown document type slugs: ${missingSlugs.join(', ')}` } },
-        { status: 400 }
-      )
-    }
-    docTypeIds   = types.map(t => t.id)
-    docTypeNames = types.map(t => t.name)
+    const resolved = await upsertDocTypesBySlug(data.requiredDocTypeSlugs)
+    docTypeIds   = resolved.map(t => t.id)
+    docTypeNames = resolved.map(t => t.name)
   }
 
   const token     = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(48))).toString('base64url')
@@ -74,7 +70,7 @@ export async function POST(req: NextRequest) {
     expiresAt,
     subEmail:           data.subContractorEmail,
     subName:            data.subContractorName,
-    isSingleUse:        true,
+    isSingleUse:        false,
   }).returning()
 
   const magicLink = `${process.env.NEXT_PUBLIC_APP_URL}/upload?t=${token}`
@@ -90,4 +86,11 @@ export async function POST(req: NextRequest) {
   })
 
   return NextResponse.json({ sessionId: session.id, magicLink, expiresAt: expiresAt.toISOString() }, { status: 201 })
+  } catch (err) {
+    console.error('[magic-link] unhandled error:', err)
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred. Please try again.' } },
+      { status: 500 }
+    )
+  }
 }

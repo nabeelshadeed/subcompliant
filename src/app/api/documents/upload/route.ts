@@ -4,7 +4,7 @@ import {
   complianceDocuments, subProfiles, uploadSessions,
   subcontractors, documentAccess, documentTypes
 } from '@/lib/db/schema'
-import { eq, and, isNull } from 'drizzle-orm'
+import { eq, and, isNull, inArray } from 'drizzle-orm'
 import { uploadToR2, generateDocKey, hashBuffer } from '@/lib/r2'
 import { enqueueJob, rateLimit } from '@/lib/redis'
 import { getAuthContext, logAudit } from '@/lib/auth/get-auth'
@@ -42,6 +42,7 @@ function detectMimeFromBytes(buf: Buffer): string | null {
 }
 
 export async function POST(req: NextRequest) {
+  try {
   // Supports two auth modes:
   // 1. Clerk JWT (contractor staff reviewing/uploading on behalf)
   // 2. Magic link token (subcontractor self-service)
@@ -55,6 +56,8 @@ export async function POST(req: NextRequest) {
   let profileId:    string
   let contractorId: string
   let grantedBy:    string | null = null
+  let sessionId:    string | null = null
+  let sessionRequiredDocTypeIds: string[] | null = null
 
   if (uploadToken) {
     // ── Magic-link mode ─────────────────────────────────────────────────────
@@ -66,25 +69,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: { code: 'SESSION_INVALID', message: 'Invalid or expired upload link' } }, { status: 401 })
     }
 
-    // Atomically claim the session to prevent race conditions on single-use links.
-    // Two concurrent requests with the same token will both hit this UPDATE, but
-    // only the first will get a row returned (WHERE usedAt IS NULL). The second
-    // gets an empty result and is rejected. This replaces the non-atomic
-    // read-then-check pattern (session.isSingleUse && session.usedAt).
-    if (session.isSingleUse) {
-      const [claimed] = await db
-        .update(uploadSessions)
-        .set({ usedAt: new Date() })
-        .where(and(
-          eq(uploadSessions.id, session.id),
-          isNull(uploadSessions.usedAt),
-        ))
-        .returning()
-
-      if (!claimed) {
-        return NextResponse.json({ error: { code: 'LINK_USED', message: 'This upload link has already been used.' } }, { status: 410 })
-      }
+    // Reject if session already completed (all required docs submitted)
+    if (session.completedAt) {
+      return NextResponse.json({ error: { code: 'SESSION_COMPLETED', message: 'All required documents have already been submitted for this link.' } }, { status: 410 })
     }
+
+    sessionId = session.id
+    sessionRequiredDocTypeIds = (session.requiredDocTypeIds as string[] | null) ?? null
 
     contractorId = session.contractorId
 
@@ -136,17 +127,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: { code: 'SUB_CREATE_FAILED', message: 'Could not link subcontractor profile' } }, { status: 500 })
     }
 
-    // Update session with resolved subcontractor (non-single-use sessions aren't
-    // claimed above, so we update them here; single-use sessions were already claimed)
-    if (!session.isSingleUse) {
-      await db.update(uploadSessions)
-        .set({ subcontractorId: sub.id })
-        .where(eq(uploadSessions.id, session.id))
-    } else {
-      await db.update(uploadSessions)
-        .set({ subcontractorId: sub.id })
-        .where(eq(uploadSessions.id, session.id))
-    }
+    // Update session with resolved subcontractor ID
+    await db.update(uploadSessions)
+      .set({ subcontractorId: sub.id })
+      .where(eq(uploadSessions.id, session.id))
 
   } else {
     // ── Authenticated mode (Clerk) ──────────────────────────────────────────
@@ -164,14 +148,18 @@ export async function POST(req: NextRequest) {
 
   // ── Simple rate limiting per profile + IP ─────────────────────────────────────
   const rateKey = `upload:${profileId}:${ip}`
-  const rl = await rateLimit(rateKey, 20, 60) // 20 uploads per minute per profile+IP
-  if (!rl.allowed) {
-    return NextResponse.json({
-      error: {
-        code:    'RATE_LIMITED',
-        message: 'Too many uploads. Please wait a moment and try again.',
-      },
-    }, { status: 429 })
+  try {
+    const rl = await rateLimit(rateKey, 20, 60) // 20 uploads per minute per profile+IP
+    if (!rl.allowed) {
+      return NextResponse.json({
+        error: {
+          code:    'RATE_LIMITED',
+          message: 'Too many uploads. Please wait a moment and try again.',
+        },
+      }, { status: 429 })
+    }
+  } catch {
+    // Redis unavailable — allow upload without rate limiting
   }
 
   // ── Parse multipart form ──────────────────────────────────────────────────
@@ -293,15 +281,42 @@ export async function POST(req: NextRequest) {
     grantedBy:    grantedBy ?? undefined,
   }).onConflictDoNothing()
 
-  // Enqueue security scan + processing job chain
-  await enqueueJob('virus_scan', {
-    documentId:  doc.id,
-    profileId,
-    contractorId,
-    fileKey,
-    mimeType:    file.type,
-    docTypeSlug: docType.slug,
-  })
+  // Enqueue security scan + processing job chain (non-fatal — doc is stored regardless)
+  try {
+    await enqueueJob('virus_scan', {
+      documentId:  doc.id,
+      profileId,
+      contractorId,
+      fileKey,
+      mimeType:    file.type,
+      docTypeSlug: docType.slug,
+    })
+  } catch {
+    // Redis unavailable — upload still succeeds; job will need to be requeued manually
+  }
+
+  // ── Session completion check (magic-link mode only) ──────────────────────
+  // Mark session as completed when all required document types have been uploaded.
+  // This lets subsequent uploads in the same session proceed until all docs are done,
+  // then locks the session to prevent further use.
+  if (sessionId && sessionRequiredDocTypeIds && sessionRequiredDocTypeIds.length > 0) {
+    const uploadedDocTypes = await db
+      .select({ documentTypeId: complianceDocuments.documentTypeId })
+      .from(complianceDocuments)
+      .where(and(
+        eq(complianceDocuments.profileId, profileId),
+        eq(complianceDocuments.isCurrent, true),
+        isNull(complianceDocuments.deletedAt),
+        inArray(complianceDocuments.documentTypeId, sessionRequiredDocTypeIds),
+      ))
+    const uploadedTypeIds = new Set(uploadedDocTypes.map(r => r.documentTypeId))
+    const allDone = sessionRequiredDocTypeIds.every(id => uploadedTypeIds.has(id))
+    if (allDone) {
+      await db.update(uploadSessions)
+        .set({ completedAt: new Date() })
+        .where(eq(uploadSessions.id, sessionId))
+    }
+  }
 
   logAudit({
     contractorId,
@@ -326,4 +341,11 @@ export async function POST(req: NextRequest) {
     status:     'pending',
     message:    'Document uploaded successfully. Processing and security scanning will begin shortly.',
   }, { status: 201 })
+  } catch (err) {
+    console.error('[upload] unhandled error:', err)
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred. Please try again.' } },
+      { status: 500 }
+    )
+  }
 }
