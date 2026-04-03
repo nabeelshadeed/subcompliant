@@ -118,30 +118,37 @@ export async function POST(
       reviewNotes,
     }).catch((err) => console.error('[review] email/notify failed:', err))
   } else {
-    // Create a new upload session so the sub gets a valid re-upload link
-    const reuploadToken = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(48))).toString('base64url')
-    const reuploadExpiresAt = addHours(new Date(), 72)
-    await db.insert(uploadSessions).values({
-      token:             reuploadToken,
-      contractorId:      ctx.contractorId,
-      subcontractorId:   sub.id,
-      createdBy:         ctx.userId,
-      requiredDocTypeIds: doc.documentTypeId ? [doc.documentTypeId] : undefined,
-      expiresAt:         reuploadExpiresAt,
-      subEmail:          profile.ownerEmail,
-      subName:           `${profile.firstName} ${profile.lastName}`.trim() || undefined,
-      isSingleUse:       false,
-    })
-    // Use a different email subject/body for "changes required" vs hard rejection
-    const emailReason = rejectedReason ?? 'Document did not meet requirements'
-    await sendDocumentRejected({
-      to:             profile.ownerEmail,
-      subName:        `${profile.firstName} ${profile.lastName}`,
-      docTypeName:     (doc as { documentType?: { name: string } }).documentType?.name ?? 'Document',
-      rejectedReason:  emailReason,
-      reuploadLink:    `${appUrl}/upload?t=${reuploadToken}`,
-      isChangesRequest,
-    }).catch((err) => console.error('[review] email/notify failed:', err))
+    // Create a new upload session so the sub gets a valid re-upload link.
+    // Wrapped in try/catch: the rejection is already committed to DB above.
+    // If session creation fails we still return success — the contractor can
+    // manually send a new invite. Failing here must NOT undo the rejection.
+    try {
+      const reuploadToken = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(48))).toString('base64url')
+      const reuploadExpiresAt = addHours(new Date(), 72)
+      await db.insert(uploadSessions).values({
+        token:             reuploadToken,
+        contractorId:      ctx.contractorId,
+        subcontractorId:   sub.id,
+        createdBy:         ctx.userId,
+        requiredDocTypeIds: doc.documentTypeId ? [doc.documentTypeId] : undefined,
+        expiresAt:         reuploadExpiresAt,
+        subEmail:          profile.ownerEmail,
+        subName:           `${profile.firstName} ${profile.lastName}`.trim() || undefined,
+        isSingleUse:       false,
+      })
+      // Use a different email subject/body for "changes required" vs hard rejection
+      const emailReason = rejectedReason ?? 'Document did not meet requirements'
+      await sendDocumentRejected({
+        to:             profile.ownerEmail,
+        subName:        `${profile.firstName} ${profile.lastName}`,
+        docTypeName:     (doc as { documentType?: { name: string } }).documentType?.name ?? 'Document',
+        rejectedReason:  emailReason,
+        reuploadLink:    `${appUrl}/upload?t=${reuploadToken}`,
+        isChangesRequest,
+      }).catch((err) => console.error('[review] email/notify failed:', err))
+    } catch (err) {
+      console.error('[review] reupload session/email failed (rejection already committed):', err)
+    }
   }
 
   // Recalculate and persist risk score immediately so the subcontractor list

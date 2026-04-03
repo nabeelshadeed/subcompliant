@@ -75,15 +75,23 @@ export async function POST(req: NextRequest) {
 
   const magicLink = `${process.env.NEXT_PUBLIC_APP_URL}/upload?t=${token}`
 
-  await sendMagicLinkInvite({
-    to:             data.subContractorEmail,
-    subName:        data.subContractorName ?? 'there',
-    contractorName: ctx.contractor.name,
-    magicLink,
-    customMessage:  data.customMessage,
-    expiresAt,
-    requiredDocs:   docTypeNames,
-  })
+  try {
+    await sendMagicLinkInvite({
+      to:             data.subContractorEmail,
+      subName:        data.subContractorName ?? 'there',
+      contractorName: ctx.contractor.name,
+      magicLink,
+      customMessage:  data.customMessage,
+      expiresAt,
+      requiredDocs:   docTypeNames,
+    })
+  } catch (emailErr) {
+    console.error('[magic-link] invite email failed:', emailErr, { sessionId: session.id })
+    return NextResponse.json(
+      { error: { code: 'EMAIL_SEND_FAILED', message: 'Invitation created but email could not be sent. Share this link manually.', magicLink } },
+      { status: 502 }
+    )
+  }
 
   return NextResponse.json({ sessionId: session.id, magicLink, expiresAt: expiresAt.toISOString() }, { status: 201 })
   } catch (err) {
